@@ -21,6 +21,7 @@
   <div class="tab-nav">
     <button class="tab-btn active" data-tab="midi" id="tabBtnMidi">🎵 MIDI编辑器</button>
     <button class="tab-btn" data-tab="dir" id="tabBtnDir">🔊 音频导出</button>
+    <button class="tab-btn" data-tab="sstv" id="tabBtnSSTV">📝 文本转音频</button>
   </div>
 </header>
 
@@ -210,6 +211,55 @@
         <span style="font-size:0.7rem;" id="previewCount"></span>
       </div>
       <div class="preview-content" id="previewContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SSTV 文本转音频 Tab
+     ═══════════════════════════════════════════ -->
+<div class="tab-content" id="tab-sstv">
+  <div class="sstv-container">
+    <div class="sstv-editor-section">
+      <label>输入文本</label>
+      <textarea id="sstvTextInput" placeholder="在此输入要转换的文本...&#10;每两个字符会被编码为一个十六进制字节，映射到 SSTV Robot72 频率范围&#10;例如: Hello World"></textarea>
+    </div>
+
+    <div class="sstv-options">
+      <label>字符时长</label>
+      <input type="range" id="sstvDurationSlider" value="100" min="20" max="500" oninput="sstvUpdateDuration(this.value)">
+      <input type="number" id="sstvDurationInput" value="100" min="20" max="500" onchange="sstvUpdateDuration(this.value)">
+      <span class="sstv-val" id="sstvDurationVal">100 ms</span>
+      <label>音量</label>
+      <input type="range" id="sstvVolSlider" value="80" min="0" max="100" oninput="sstvUpdateVolume(this.value)">
+      <span class="sstv-val" id="sstvVolVal">80%</span>
+    </div>
+
+    <div class="sstv-controls">
+      <button class="btn primary" id="sstvBtnPlay" onclick="sstvTogglePlay()">▶ 播放</button>
+      <button class="btn" id="sstvBtnStop" onclick="sstvStopPlayback()" disabled>⏹ 停止</button>
+      <button class="btn accent2" id="sstvBtnExport" onclick="sstvExportWAV()">🔊 导出 WAV</button>
+      <button class="btn" onclick="sstvRefreshHex()">🔄 刷新编码</button>
+    </div>
+
+    <div class="sstv-hex-preview" id="sstvHexPreview">
+      <div class="sstv-hex-label">十六进制编码预览</div>
+      <div id="sstvHexContent"></div>
+    </div>
+
+    <div class="sstv-freq-table" id="sstvFreqTable">
+      <table>
+        <thead>
+          <tr><th>#</th><th>字符</th><th>Hex</th><th>频率 (Hz)</th></tr>
+        </thead>
+        <tbody id="sstvFreqTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="sstv-info-card">
+      <strong>SSTV Robot72 Color 频率映射</strong><br>
+      文本字符 → ASCII/Unicode 编码 → 十六进制 <code>00</code>~<code>FF</code> → 映射到 SSTV 亮度频率范围 <code>1500 Hz</code> (黑) ~ <code>2300 Hz</code> (白)<br>
+      频率计算公式: <code>freq = 1500 + (hexVal / 255) × 800</code>
     </div>
   </div>
 </div>

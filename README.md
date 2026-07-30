@@ -1,7 +1,6 @@
-A-0000 0001
 # MIDI Tools
 
-> [中文版](README_zh.md)
+> [Русский](README_ru.md) | [中文](README_zh.md)
 
 A zero-dependency, browser-based MIDI text editor and audio export toolset. Compose music using Just Intonation frequency ratios, with real-time playback, waveform control, and WAV/MIDI export.
 
@@ -155,4 +154,4 @@ scheduleUIUpdates() ── playback highlight driven by requestAnimationFrame
 
 ## License
 
- AGPL License
+AGPL License
