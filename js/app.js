@@ -442,67 +442,141 @@
     return { num: num, den: den, str: num + '/' + den };
   }
 
+  function parseNoteLine(line, i) {
+    var parts = line.split(',').map(function(s) { return s.trim(); });
+    if (parts.length < 2) {
+      parseErrors.push({ line: i, msg: '格式错误：至少需要时值和音高' });
+      return null;
+    }
+
+    var durFrac = parseFraction(parts[0], 1, 1);
+    if (!durFrac) {
+      parseErrors.push({ line: i, msg: '时值格式错误：需为 分子/分母（如 1/1, 1/8）' });
+      return null;
+    }
+    var duration = durFrac.num / durFrac.den;
+
+    var pitchFrac = parseFraction(parts[1], 1, 1);
+    if (!pitchFrac) {
+      parseErrors.push({ line: i, msg: '音高格式错误：需为 分子/分母（如 1/1, 4/3, 3/2）' });
+      return null;
+    }
+    var freq = ratioToFreq(pitchFrac.num, pitchFrac.den);
+    var simplified = simplifyFraction(pitchFrac.num, pitchFrac.den);
+
+    var size = 10;
+    var sizeStr = '10';
+    if (parts.length >= 3 && parts[2] !== '') {
+      var sizeRaw = parts[2];
+      var sizeNum = parseInt(sizeRaw, 10);
+      if (!isNaN(sizeNum) && sizeNum >= 1 && sizeNum <= 10 && /^\d{2}$/.test(sizeRaw)) {
+        size = sizeNum; sizeStr = sizeRaw;
+      } else {
+        parseErrors.push({ line: i, msg: '大小格式错误：需为两位数 01~10' });
+        return null;
+      }
+    }
+    var velocity = size * 10;
+
+    var noteId = '';
+    if (parts.length >= 4 && parts[3] !== '') {
+      var idRaw = parts[3];
+      if (/^\d{2}$/.test(idRaw)) { noteId = idRaw; }
+      else {
+        parseErrors.push({ line: i, msg: '编号格式错误：需为两位数 00~99' });
+        return null;
+      }
+    }
+
+    return {
+      type: 'note',
+      line: i, duration: duration, durFrac: durFrac.str, durNum: durFrac.num, durDen: durFrac.den,
+      pitchFrac: pitchFrac.str, pitchNum: pitchFrac.num, pitchDen: pitchFrac.den,
+      pitchFracSimple: simplified.num + '/' + simplified.den, freq: freq,
+      size: size, sizeStr: sizeStr, velocity: velocity, id: noteId, raw: line
+    };
+  }
+
   function parseEditor() {
     var text = editor.value;
     var lines = text.split('\n');
     parsedNotes = [];
     parseErrors = [];
+    var inChord = false;
+    var chordOpenLine = -1;
+    var chordNotes = [];
 
     for (var i = 0; i < lines.length; i++) {
       var line = lines[i].trim();
       if (line === '' || line.indexOf('//') === 0 || line.indexOf('#') === 0) continue;
 
-      var parts = line.split(',').map(function(s) { return s.trim(); });
-      if (parts.length < 2) {
-        parseErrors.push({ line: i, msg: '格式错误：至少需要时值和音高' });
-        continue;
-      }
-
-      var durFrac = parseFraction(parts[0], 1, 1);
-      if (!durFrac) {
-        parseErrors.push({ line: i, msg: '时值格式错误：需为 分子/分母（如 1/1, 1/8）' });
-        continue;
-      }
-      var duration = durFrac.num / durFrac.den;
-
-      var pitchFrac = parseFraction(parts[1], 1, 1);
-      if (!pitchFrac) {
-        parseErrors.push({ line: i, msg: '音高格式错误：需为 分子/分母（如 1/1, 4/3, 3/2）' });
-        continue;
-      }
-      var freq = ratioToFreq(pitchFrac.num, pitchFrac.den);
-      var simplified = simplifyFraction(pitchFrac.num, pitchFrac.den);
-
-      var size = 10;
-      var sizeStr = '10';
-      if (parts.length >= 3 && parts[2] !== '') {
-        var sizeRaw = parts[2];
-        var sizeNum = parseInt(sizeRaw, 10);
-        if (!isNaN(sizeNum) && sizeNum >= 1 && sizeNum <= 10 && /^\d{2}$/.test(sizeRaw)) {
-          size = sizeNum; sizeStr = sizeRaw;
-        } else {
-          parseErrors.push({ line: i, msg: '大小格式错误：需为两位数 01~10' });
+      // 和弦开始标记 { 独占一行
+      if (line === '{') {
+        if (inChord) {
+          parseErrors.push({ line: i, msg: '不支持嵌套和弦：在已有和弦块内遇到了新的 {' });
           continue;
         }
+        inChord = true;
+        chordOpenLine = i;
+        chordNotes = [];
+        continue;
       }
-      var velocity = size * 10;
 
-      var noteId = '';
-      if (parts.length >= 4 && parts[3] !== '') {
-        var idRaw = parts[3];
-        if (/^\d{2}$/.test(idRaw)) { noteId = idRaw; }
-        else {
-          parseErrors.push({ line: i, msg: '编号格式错误：需为两位数 00~99' });
+      // 和弦结束标记 } 独占一行
+      if (line === '}') {
+        if (!inChord) {
+          parseErrors.push({ line: i, msg: '未匹配的和弦结束符：没有对应的 {' });
           continue;
         }
+        if (chordNotes.length === 0) {
+          parseErrors.push({ line: i, msg: '空和弦块（没有音符）' });
+          inChord = false;
+          continue;
+        }
+        var maxDuration = 0;
+        for (var ci = 0; ci < chordNotes.length; ci++) {
+          if (chordNotes[ci].duration > maxDuration) maxDuration = chordNotes[ci].duration;
+        }
+        parsedNotes.push({
+          type: 'chord',
+          line: chordOpenLine,
+          endLine: i,
+          firstNoteLine: chordNotes[0].line,
+          notes: chordNotes,
+          duration: maxDuration,
+          raw: lines.slice(chordOpenLine, i + 1).join('\n')
+        });
+        inChord = false;
+        chordNotes = [];
+        continue;
       }
 
-      parsedNotes.push({
-        line: i, duration: duration, durFrac: durFrac.str, durNum: durFrac.num, durDen: durFrac.den,
-        pitchFrac: pitchFrac.str, pitchNum: pitchFrac.num, pitchDen: pitchFrac.den,
-        pitchFracSimple: simplified.num + '/' + simplified.den, freq: freq,
-        size: size, sizeStr: sizeStr, velocity: velocity, id: noteId, raw: line
-      });
+      // 检查基准频率标记 {R+频率+HZ}
+      var freqMatch = line.match(/^\{R\+(\d+(?:\.\d+)?)\+HZ\}$/);
+      if (freqMatch) {
+        var newFreq = parseFloat(freqMatch[1]);
+        if (newFreq > 0) {
+          baseFreq = newFreq;
+          document.getElementById('baseFreqInput').value = baseFreq;
+          document.getElementById('baseFreqDisplay').textContent = baseFreq.toFixed(1) + ' Hz';
+        }
+        continue;
+      }
+
+      // 解析普通音符行
+      var noteObj = parseNoteLine(line, i);
+      if (!noteObj) continue;
+
+      if (inChord) {
+        chordNotes.push(noteObj);
+      } else {
+        parsedNotes.push(noteObj);
+      }
+    }
+
+    // 检查未闭合和弦
+    if (inChord) {
+      parseErrors.push({ line: chordOpenLine, msg: '和弦块未闭合：缺少 }' });
     }
 
     updateGutter(); updateStatusBar(); updateHighlightOverlay();
@@ -513,9 +587,19 @@
     var lines = editor.value.split('\n');
     var errorLines = {};
     for (var i = 0; i < parseErrors.length; i++) errorLines[parseErrors[i].line] = true;
+    // 标记和弦括号行
+    var chordMarkers = {};
+    for (var i = 0; i < parsedNotes.length; i++) {
+      if (parsedNotes[i].type === 'chord') {
+        chordMarkers[parsedNotes[i].line] = 'open';
+        chordMarkers[parsedNotes[i].endLine] = 'close';
+      }
+    }
     var html = '';
     for (var i = 0; i < lines.length; i++) {
-      var cls = errorLines[i] ? ' error' : '';
+      var cls = '';
+      if (errorLines[i]) cls += ' error';
+      if (chordMarkers[i]) cls += ' chord-marker';
       html += '<div class="gutter-line' + cls + '">' + (i + 1) + '</div>';
     }
     gutter.innerHTML = html;
@@ -541,30 +625,58 @@
     for (var i = 0; i < gutterLines.length; i++) gutterLines[i].classList.remove('playing');
 
     if (index >= 0 && index < parsedNotes.length) {
-      var note = parsedNotes[index];
-      if (note.line < rows.length) rows[note.line].classList.add('playing');
-      if (note.line < gutterLines.length) gutterLines[note.line].classList.add('playing');
-      updateNoteInfo(note, index);
+      var item = parsedNotes[index];
+      if (item.type === 'chord') {
+        // 和弦：高亮第一个音符行（光标停在和弦第一行），括号行也标记
+        if (item.firstNoteLine < rows.length) rows[item.firstNoteLine].classList.add('playing');
+        if (item.firstNoteLine < gutterLines.length) gutterLines[item.firstNoteLine].classList.add('playing');
+        if (item.line < rows.length) rows[item.line].classList.add('chord-playing');
+        if (item.line < gutterLines.length) gutterLines[item.line].classList.add('chord-playing');
+        if (item.endLine < rows.length) rows[item.endLine].classList.add('chord-playing');
+        if (item.endLine < gutterLines.length) gutterLines[item.endLine].classList.add('chord-playing');
+        updateNoteInfo(item, index);
+      } else {
+        if (item.line < rows.length) rows[item.line].classList.add('playing');
+        if (item.line < gutterLines.length) gutterLines[item.line].classList.add('playing');
+        updateNoteInfo(item, index);
+      }
     }
   }
 
   function clearHighlight() {
     var rows = highlightOverlay.querySelectorAll('.highlight-row');
-    for (var i = 0; i < rows.length; i++) rows[i].classList.remove('playing');
+    for (var i = 0; i < rows.length; i++) {
+      rows[i].classList.remove('playing');
+      rows[i].classList.remove('chord-playing');
+    }
     var gutterLines = gutter.querySelectorAll('.gutter-line');
-    for (var i = 0; i < gutterLines.length; i++) gutterLines[i].classList.remove('playing');
+    for (var i = 0; i < gutterLines.length; i++) {
+      gutterLines[i].classList.remove('playing');
+      gutterLines[i].classList.remove('chord-playing');
+    }
     clearNoteInfo();
   }
 
   function updateNoteInfo(note, index) {
-    document.getElementById('infoLine').textContent = (index + 1) + ' / ' + parsedNotes.length;
-    document.getElementById('infoDurFrac').textContent = note.durFrac;
-    document.getElementById('infoDuration').textContent = note.duration.toFixed(3) + ' 拍';
-    document.getElementById('infoPitchFrac').textContent = note.pitchFrac;
-    document.getElementById('infoPitchSimple').textContent = note.pitchFrac !== note.pitchFracSimple ? note.pitchFracSimple : '—';
-    document.getElementById('infoFreq').textContent = note.freq.toFixed(2) + ' Hz';
-    document.getElementById('infoSize').textContent = note.sizeStr + ' (力度:' + note.velocity + ')';
-    document.getElementById('infoId').textContent = note.id || '-';
+    if (note.type === 'chord') {
+      document.getElementById('infoLine').textContent = (index + 1) + ' / ' + parsedNotes.length + ' [和弦]';
+      document.getElementById('infoDurFrac').textContent = note.duration.toFixed(3) + ' 拍';
+      document.getElementById('infoDuration').textContent = note.notes.length + ' 个音符';
+      document.getElementById('infoPitchFrac').textContent = '和弦';
+      document.getElementById('infoPitchSimple').textContent = '—';
+      document.getElementById('infoFreq').textContent = '—';
+      document.getElementById('infoSize').textContent = '—';
+      document.getElementById('infoId').textContent = '—';
+    } else {
+      document.getElementById('infoLine').textContent = (index + 1) + ' / ' + parsedNotes.length;
+      document.getElementById('infoDurFrac').textContent = note.durFrac;
+      document.getElementById('infoDuration').textContent = note.duration.toFixed(3) + ' 拍';
+      document.getElementById('infoPitchFrac').textContent = note.pitchFrac;
+      document.getElementById('infoPitchSimple').textContent = note.pitchFrac !== note.pitchFracSimple ? note.pitchFracSimple : '—';
+      document.getElementById('infoFreq').textContent = note.freq.toFixed(2) + ' Hz';
+      document.getElementById('infoSize').textContent = note.sizeStr + ' (力度:' + note.velocity + ')';
+      document.getElementById('infoId').textContent = note.id || '-';
+    }
   }
 
   function clearNoteInfo() {
@@ -573,9 +685,17 @@
   }
 
   function updateStatusBar() {
-    noteCount.textContent = '音符: ' + parsedNotes.length;
+    var totalNotes = 0;
     var totalBeats = 0;
-    for (var i = 0; i < parsedNotes.length; i++) totalBeats += parsedNotes[i].duration;
+    for (var i = 0; i < parsedNotes.length; i++) {
+      if (parsedNotes[i].type === 'chord') {
+        totalNotes += parsedNotes[i].notes.length;
+      } else {
+        totalNotes += 1;
+      }
+      totalBeats += parsedNotes[i].duration;
+    }
+    noteCount.textContent = '音符: ' + totalNotes;
     totalDuration.textContent = '总时长: ' + totalBeats.toFixed(1) + '拍';
     if (parseErrors.length > 0) {
       errorCount.style.display = 'inline';
@@ -608,14 +728,28 @@
     var effBPM = getEffectiveBPM();
 
     for (var i = 0; i < parsedNotes.length; i++) {
-      var note = parsedNotes[i];
-      var noteStartTime = now + cumulativeTime;
-      var scheduled = scheduleNote(note, noteStartTime);
-      scheduled.noteIndex = i;
-      scheduled.startTime = noteStartTime;
-      scheduled.duration = note.duration * (60 / effBPM);
-      scheduledNotes.push(scheduled);
-      cumulativeTime += note.duration * (60 / effBPM);
+      var item = parsedNotes[i];
+      if (item.type === 'chord') {
+        // 和弦：所有音符同时启动
+        for (var ci = 0; ci < item.notes.length; ci++) {
+          var cn = item.notes[ci];
+          var scheduled = scheduleNote(cn, now + cumulativeTime);
+          scheduled.noteIndex = i;
+          scheduled.startTime = now + cumulativeTime;
+          scheduled.duration = cn.duration * (60 / effBPM);
+          scheduled.isChord = true;
+          scheduledNotes.push(scheduled);
+        }
+        cumulativeTime += item.duration * (60 / effBPM);
+      } else {
+        var noteStartTime = now + cumulativeTime;
+        var scheduled = scheduleNote(item, noteStartTime);
+        scheduled.noteIndex = i;
+        scheduled.startTime = noteStartTime;
+        scheduled.duration = item.duration * (60 / effBPM);
+        scheduledNotes.push(scheduled);
+        cumulativeTime += item.duration * (60 / effBPM);
+      }
     }
 
     currentNoteIndex = 0;
@@ -627,15 +761,22 @@
     var ctx = getAudioContext();
     var now = ctx.currentTime;
 
-    for (var i = currentNoteIndex; i < scheduledNotes.length; i++) {
+    // 从头部扫描：找到第一个仍在播放的调度条目，其 noteIndex 即为当前音符
+    var foundCurrent = false;
+    for (var i = 0; i < scheduledNotes.length; i++) {
       var s = scheduledNotes[i];
       if (now < s.startTime + s.duration) {
-        if (i !== currentNoteIndex) { currentNoteIndex = i; highlightLine(i); }
+        if (s.noteIndex !== currentNoteIndex) {
+          currentNoteIndex = s.noteIndex;
+          highlightLine(s.noteIndex);
+        }
+        foundCurrent = true;
         break;
       }
-      if (i === scheduledNotes.length - 1) {
-        if (now >= s.startTime + s.duration) { stopPlayback(); return; }
-      }
+    }
+    if (!foundCurrent) {
+      stopPlayback();
+      return;
     }
     if (isPlaying) requestAnimationFrame(scheduleUIUpdates);
   }
@@ -675,16 +816,28 @@
     var effBPM = getEffectiveBPM();
 
     for (var i = 0; i < parsedNotes.length; i++) {
-      var note = parsedNotes[i];
+      var item = parsedNotes[i];
       var noteStartTime = now + cumulativeTime;
       if (i >= resumeFrom) {
-        var scheduled = scheduleNote(note, Math.max(now, noteStartTime));
-        scheduled.noteIndex = i;
-        scheduled.startTime = Math.max(now, noteStartTime);
-        scheduled.duration = note.duration * (60 / effBPM);
-        scheduledNotes.push(scheduled);
+        if (item.type === 'chord') {
+          for (var ci = 0; ci < item.notes.length; ci++) {
+            var cn = item.notes[ci];
+            var scheduled = scheduleNote(cn, Math.max(now, noteStartTime));
+            scheduled.noteIndex = i;
+            scheduled.startTime = Math.max(now, noteStartTime);
+            scheduled.duration = cn.duration * (60 / effBPM);
+            scheduled.isChord = true;
+            scheduledNotes.push(scheduled);
+          }
+        } else {
+          var scheduled = scheduleNote(item, Math.max(now, noteStartTime));
+          scheduled.noteIndex = i;
+          scheduled.startTime = Math.max(now, noteStartTime);
+          scheduled.duration = item.duration * (60 / effBPM);
+          scheduledNotes.push(scheduled);
+        }
       }
-      cumulativeTime += note.duration * (60 / effBPM);
+      cumulativeTime += item.duration * (60 / effBPM);
     }
     scheduleUIUpdates();
   }
@@ -766,7 +919,7 @@
     } else if (type === 'melody') {
       content = '// 小星星 (纯律)\n1/1,1/1,10,01\n1/1,1/1,10,02\n1/1,3/2,09,03\n1/1,3/2,09,04\n1/1,5/3,08,05\n1/1,5/3,08,06\n2/1,3/2,08,07\n1/1,4/3,08,08\n1/1,4/3,08,09\n1/1,5/4,09,10\n1/1,5/4,09,11\n1/1,9/8,10,12\n1/1,9/8,10,13\n2/1,1/1,10,14';
     } else if (type === 'chords') {
-      content = '// 大三和弦: 1/1, 5/4, 3/2\n1/2,1/1,10,01\n1/2,5/4,09,02\n1/2,3/2,08,03\n1/2,2/1,07,04\n1/2,3/2,08,05\n1/2,5/4,09,06\n// 小三和弦: 1/1, 6/5, 3/2\n1/2,1/1,10,07\n1/2,6/5,09,08\n1/2,3/2,08,09\n1/2,2/1,07,10\n1/2,3/2,08,11\n1/2,6/5,09,12\n// 属七和弦: 1/1, 5/4, 3/2, 7/4\n1/2,1/1,10,13\n1/2,5/4,09,14\n1/2,3/2,08,15\n1/2,7/4,07,16\n1/2,3/2,08,17\n1/2,5/4,09,18\n// 柱式和弦\n3/1,1/1,10,19\n3/1,5/4,09,20\n3/1,3/2,08,21\n3/1,2/1,07,22';
+      content = '// 和弦示例：使用 { } 语法，大括号各自独占一行\n// 块内音符同时演奏，和弦时长取最长音符\n// 大三和弦\n{\n1/1,1/1,10,01\n1/1,5/4,09,02\n1/1,3/2,08,03\n}\n// 小三和弦\n{\n1/1,1/1,10,04\n1/1,6/5,09,05\n1/1,3/2,08,06\n}\n// 属七和弦\n{\n1/1,1/1,10,07\n1/1,5/4,09,08\n1/1,3/2,08,09\n1/1,7/4,07,10\n}\n// 柱式和弦（长音）\n{\n3/1,1/1,10,11\n3/1,5/4,09,12\n3/1,3/2,08,13\n3/1,2/1,07,14\n}';
     }
     editor.value = content;
     parseEditor();
@@ -942,10 +1095,18 @@
     var notes = getNotes();
     var effBPM = getEffBPM();
     var totalBeats = 0;
-    for (var i = 0; i < notes.length; i++) totalBeats += notes[i].duration;
+    var totalNotes = 0;
+    for (var i = 0; i < notes.length; i++) {
+      if (notes[i].type === 'chord') {
+        totalNotes += notes[i].notes.length;
+      } else {
+        totalNotes += 1;
+      }
+      totalBeats += notes[i].duration;
+    }
     var durationSec = totalBeats * 60 / effBPM;
 
-    document.getElementById('exportNoteCount').textContent = notes.length;
+    document.getElementById('exportNoteCount').textContent = totalNotes;
     document.getElementById('exportTotalBeats').textContent = totalBeats.toFixed(1);
     document.getElementById('exportBPM').textContent = Math.round(effBPM);
     document.getElementById('exportDuration').textContent = durationSec.toFixed(1) + 's';
@@ -959,12 +1120,20 @@
       return;
     }
     previewBox.classList.add('show');
-    previewCount.textContent = notes.length + ' 个音符';
+    previewCount.textContent = totalNotes + ' 个音符';
 
     var lines = [];
     for (var i = 0; i < notes.length; i++) {
       var n = notes[i];
-      lines.push((i + 1) + '. ' + n.durFrac + ', ' + n.pitchFrac + ', ' + n.sizeStr + (n.id ? ', ' + n.id : ''));
+      if (n.type === 'chord') {
+        lines.push((i + 1) + '. [和弦]  ' + n.notes.length + ' 音符, 最长 ' + n.duration.toFixed(2) + ' 拍');
+        for (var ci = 0; ci < n.notes.length; ci++) {
+          var cn = n.notes[ci];
+          lines.push('    ' + cn.durFrac + ', ' + cn.pitchFrac + ', ' + cn.sizeStr + (cn.id ? ', ' + cn.id : ''));
+        }
+      } else {
+        lines.push((i + 1) + '. ' + n.durFrac + ', ' + n.pitchFrac + ', ' + n.sizeStr + (n.id ? ', ' + n.id : ''));
+      }
     }
     previewContent.textContent = lines.join('\n');
   };
@@ -1040,42 +1209,84 @@
     var cumulativeTime = 0;
     for (var i = 0; i < notes.length; i++) {
       var note = notes[i];
-      var freq = baseFreq * (note.pitchNum / note.pitchDen);
-      var noteDuration = note.duration * beatDuration;
-      var velocity = note.velocity / 100;
-      var vol = velocity * volume;
+      if (note.type === 'chord') {
+        // 和弦：所有音符同时启动
+        for (var ci = 0; ci < note.notes.length; ci++) {
+          var cn = note.notes[ci];
+          var freq = baseFreq * (cn.pitchNum / cn.pitchDen);
+          var noteDuration = cn.duration * beatDuration;
+          var velocity = cn.velocity / 100;
+          var vol = velocity * volume;
 
-      var osc = offlineCtx.createOscillator();
-      osc.type = waveform;
-      osc.frequency.setValueAtTime(freq, cumulativeTime);
+          var osc = offlineCtx.createOscillator();
+          osc.type = waveform;
+          osc.frequency.setValueAtTime(freq, cumulativeTime);
 
-      var osc2 = offlineCtx.createOscillator();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(freq * 2, cumulativeTime);
+          var osc2 = offlineCtx.createOscillator();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(freq * 2, cumulativeTime);
 
-      var gain = offlineCtx.createGain();
-      var attackTime = Math.min(0.02, noteDuration * 0.1);
-      var decayTime = Math.min(0.08, noteDuration * 0.2);
-      var sustainLevel = vol * 0.7;
+          var gain = offlineCtx.createGain();
+          var attackTime = Math.min(0.02, noteDuration * 0.1);
+          var decayTime = Math.min(0.08, noteDuration * 0.2);
+          var sustainLevel = vol * 0.7;
 
-      gain.gain.setValueAtTime(0, cumulativeTime);
-      gain.gain.linearRampToValueAtTime(vol, cumulativeTime + attackTime);
-      gain.gain.linearRampToValueAtTime(sustainLevel, cumulativeTime + attackTime + decayTime);
-      gain.gain.setValueAtTime(sustainLevel, cumulativeTime + noteDuration * 0.8);
-      gain.gain.linearRampToValueAtTime(0, cumulativeTime + noteDuration);
+          gain.gain.setValueAtTime(0, cumulativeTime);
+          gain.gain.linearRampToValueAtTime(vol, cumulativeTime + attackTime);
+          gain.gain.linearRampToValueAtTime(sustainLevel, cumulativeTime + attackTime + decayTime);
+          gain.gain.setValueAtTime(sustainLevel, cumulativeTime + noteDuration * 0.8);
+          gain.gain.linearRampToValueAtTime(0, cumulativeTime + noteDuration);
 
-      var gain2 = offlineCtx.createGain();
-      gain2.gain.setValueAtTime(0, cumulativeTime);
-      gain2.gain.linearRampToValueAtTime(vol * 0.15, cumulativeTime + attackTime);
-      gain2.gain.linearRampToValueAtTime(0, cumulativeTime + noteDuration * 0.5);
+          var gain2 = offlineCtx.createGain();
+          gain2.gain.setValueAtTime(0, cumulativeTime);
+          gain2.gain.linearRampToValueAtTime(vol * 0.15, cumulativeTime + attackTime);
+          gain2.gain.linearRampToValueAtTime(0, cumulativeTime + noteDuration * 0.5);
 
-      osc.connect(gain); osc2.connect(gain2);
-      gain.connect(offlineCtx.destination); gain2.connect(offlineCtx.destination);
+          osc.connect(gain); osc2.connect(gain2);
+          gain.connect(offlineCtx.destination); gain2.connect(offlineCtx.destination);
 
-      osc.start(cumulativeTime); osc.stop(cumulativeTime + noteDuration + 0.05);
-      osc2.start(cumulativeTime); osc2.stop(cumulativeTime + noteDuration * 0.5 + 0.05);
+          osc.start(cumulativeTime); osc.stop(cumulativeTime + noteDuration + 0.05);
+          osc2.start(cumulativeTime); osc2.stop(cumulativeTime + noteDuration * 0.5 + 0.05);
+        }
+        cumulativeTime += note.duration * beatDuration;
+      } else {
+        var freq = baseFreq * (note.pitchNum / note.pitchDen);
+        var noteDuration = note.duration * beatDuration;
+        var velocity = note.velocity / 100;
+        var vol = velocity * volume;
 
-      cumulativeTime += noteDuration;
+        var osc = offlineCtx.createOscillator();
+        osc.type = waveform;
+        osc.frequency.setValueAtTime(freq, cumulativeTime);
+
+        var osc2 = offlineCtx.createOscillator();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(freq * 2, cumulativeTime);
+
+        var gain = offlineCtx.createGain();
+        var attackTime = Math.min(0.02, noteDuration * 0.1);
+        var decayTime = Math.min(0.08, noteDuration * 0.2);
+        var sustainLevel = vol * 0.7;
+
+        gain.gain.setValueAtTime(0, cumulativeTime);
+        gain.gain.linearRampToValueAtTime(vol, cumulativeTime + attackTime);
+        gain.gain.linearRampToValueAtTime(sustainLevel, cumulativeTime + attackTime + decayTime);
+        gain.gain.setValueAtTime(sustainLevel, cumulativeTime + noteDuration * 0.8);
+        gain.gain.linearRampToValueAtTime(0, cumulativeTime + noteDuration);
+
+        var gain2 = offlineCtx.createGain();
+        gain2.gain.setValueAtTime(0, cumulativeTime);
+        gain2.gain.linearRampToValueAtTime(vol * 0.15, cumulativeTime + attackTime);
+        gain2.gain.linearRampToValueAtTime(0, cumulativeTime + noteDuration * 0.5);
+
+        osc.connect(gain); osc2.connect(gain2);
+        gain.connect(offlineCtx.destination); gain2.connect(offlineCtx.destination);
+
+        osc.start(cumulativeTime); osc.stop(cumulativeTime + noteDuration + 0.05);
+        osc2.start(cumulativeTime); osc2.stop(cumulativeTime + noteDuration * 0.5 + 0.05);
+
+        cumulativeTime += noteDuration;
+      }
     }
 
     try {
@@ -1162,19 +1373,50 @@
     // 音符事件
     for (var i = 0; i < notes.length; i++) {
       var note = notes[i];
-      var freq = baseFreq * (note.pitchNum / note.pitchDen);
-      var midiNote = Math.max(0, Math.min(127, freqToMidiNote(freq)));
-      var velocity = note.velocity;
-
-      var noteTicks;
-      if (noteLenMode === 'fixed') {
-        noteTicks = Math.round(PPQN / 2); // 八分音符
+      if (note.type === 'chord') {
+        // 和弦：所有音符同时 Note On (delta=0)
+        for (var ci = 0; ci < note.notes.length; ci++) {
+          var cn = note.notes[ci];
+          var freq = baseFreq * (cn.pitchNum / cn.pitchDen);
+          var midiNote = Math.max(0, Math.min(127, freqToMidiNote(freq)));
+          trackEvents.push({ delta: 0, data: [0x90, midiNote, cn.velocity] });
+        }
+        // 和弦 Note Off：统一使用和弦最大时值，按实际时长排序后依次发送
+        var chordNoteOffs = [];
+        for (var cj = 0; cj < note.notes.length; cj++) {
+          var cjn = note.notes[cj];
+          var freq = baseFreq * (cjn.pitchNum / cjn.pitchDen);
+          var midiNote = Math.max(0, Math.min(127, freqToMidiNote(freq)));
+          var actualTicks;
+          if (noteLenMode === 'fixed') {
+            actualTicks = Math.round(PPQN / 2);
+          } else {
+            actualTicks = Math.round(cjn.duration * PPQN);
+          }
+          chordNoteOffs.push({ ticks: actualTicks, midiNote: midiNote });
+        }
+        // 按时长排序（短的先结束）
+        chordNoteOffs.sort(function(a, b) { return a.ticks - b.ticks; });
+        var prevTicks = 0;
+        for (var ck = 0; ck < chordNoteOffs.length; ck++) {
+          trackEvents.push({ delta: chordNoteOffs[ck].ticks - prevTicks, data: [0x80, chordNoteOffs[ck].midiNote, 0] });
+          prevTicks = chordNoteOffs[ck].ticks;
+        }
       } else {
-        noteTicks = Math.round(note.duration * PPQN);
-      }
+        var freq = baseFreq * (note.pitchNum / note.pitchDen);
+        var midiNote = Math.max(0, Math.min(127, freqToMidiNote(freq)));
+        var velocity = note.velocity;
 
-      trackEvents.push({ delta: (i === 0) ? 0 : 0, data: [0x90, midiNote, velocity] });
-      trackEvents.push({ delta: noteTicks, data: [0x80, midiNote, 0] });
+        var noteTicks;
+        if (noteLenMode === 'fixed') {
+          noteTicks = Math.round(PPQN / 2);
+        } else {
+          noteTicks = Math.round(note.duration * PPQN);
+        }
+
+        trackEvents.push({ delta: (i === 0) ? 0 : 0, data: [0x90, midiNote, velocity] });
+        trackEvents.push({ delta: noteTicks, data: [0x80, midiNote, 0] });
+      }
     }
 
     // 轨道结束

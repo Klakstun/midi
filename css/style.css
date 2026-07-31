@@ -230,6 +230,8 @@ header .logo span { color: var(--accent); }
 .gutter-line { line-height: var(--editor-lh); padding: 0 2px; transition: color var(--transition); }
 .gutter-line.error { color: #ff643c; }
 .gutter-line.playing { color: var(--accent2); font-weight: 700; }
+.gutter-line.chord-marker { color: var(--accent); font-weight: 700; }
+.gutter-line.chord-playing { color: var(--accent); font-weight: 700; }
 .editor-area {
   flex: 1;
   position: relative;
@@ -267,6 +269,7 @@ header .logo span { color: var(--accent); }
   transition: background var(--transition);
 }
 .highlight-row.playing { background: var(--playing); }
+.highlight-row.chord-playing { background: rgba(233, 69, 96, 0.15); }
 .sidebar {
   width: 280px;
   background: var(--bg2);

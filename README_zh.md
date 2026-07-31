@@ -1,7 +1,6 @@
-A-0000 0001
 # MIDI 工具集
 
-> [English](README.md)
+> [English](README.md) | [Русский](README_ru.md)
 
 一个纯前端、零依赖的 Web MIDI 文本编辑器与音频导出工具集。使用纯律（Just Intonation）频率比编写音乐，支持实时播放、波形调节和 WAV/MIDI 导出。
 
