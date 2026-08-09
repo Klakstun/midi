@@ -1,4 +1,367 @@
 /* ═══════════════════════════════════════════
+   i18n 国际化系统
+   ═══════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  var I18N = {
+    zh: {
+      'app.title': '工具集',
+      'tab.midi': '🎵 MIDI编辑器',
+      'tab.audio': '🔊 音频导出',
+      'tab.sstv': '📝 文本转音频',
+
+      'btn.play': '▶ 播放',
+      'btn.pause': '⏸ 暂停',
+      'btn.resume': '▶ 继续',
+      'btn.stop': '⏹ 停止',
+      'label.bpm': 'BPM',
+      'label.baseFreq': '基准频率',
+      'label.volume': '音量',
+      'label.waveform': '波形',
+      'waveform.triangle': '三角波',
+      'waveform.sine': '正弦波',
+      'waveform.square': '方波',
+      'waveform.sawtooth': '锯齿波',
+      'btn.scale': '纯律音阶',
+      'btn.melody': '旋律示例',
+      'btn.chords': '和弦示例',
+      'btn.import': '📂 导入',
+      'btn.export': '💾 导出',
+      'btn.clear': '清空',
+
+      'editor.placeholder': '在此输入 MIDI 文本，格式：\n时值,音高,大小,编号\n\n例如：\n1/1,1/1,10,01\n1/1,9/8,10,02\n1/1,5/4,10,03\n1/1,4/3,10,04',
+
+      'sidebar.speed': '速度调节',
+      'sidebar.speedRate': '倍率',
+      'sidebar.speedBPM': '有效 BPM: ',
+      'sidebar.noteInfo': '当前音符信息',
+      'sidebar.format': '格式说明',
+      'sidebar.shortcuts': '快捷键',
+
+      'info.labelLine': '行号',
+      'info.labelDurFrac': '时值(分数)',
+      'info.labelDuration': '时值(拍)',
+      'info.labelPitchFrac': '音高(分数)',
+      'info.labelPitchSimple': '音高(简化)',
+      'info.labelFreq': '频率',
+      'info.labelSize': '大小(01-10)',
+      'info.labelId': '编号',
+
+      'info.line': ' 行',
+      'info.lineChord': ' [和弦]',
+      'info.notes': ' 个音符',
+      'info.chord': '和弦',
+      'info.beats': ' 拍',
+      'info.velocity': '力度:',
+      'info.vel': '力度:',
+
+      'status.ready': '就绪',
+      'status.playing': '演奏中...',
+      'status.paused': '已暂停',
+      'status.notes': '音符: ',
+      'status.total': '总时长: ',
+      'status.errors': '错误: ',
+      'status.beats': '拍',
+
+      'audio.title': '音频导出工具',
+      'audio.subtitle': '将编辑器中的音符导出为 WAV 音频或 MIDI 文件',
+      'audio.statNotes': '音符数',
+      'audio.statBeats': '总时长(拍)',
+      'audio.statBPM': '有效 BPM',
+      'audio.statDuration': '预计时长',
+      'audio.exportWAV': '🔊 导出 WAV',
+      'audio.exportMIDI': '🎹 导出 MIDI',
+      'audio.refresh': '🔄 刷新',
+      'audio.sampleRate': '采样率',
+      'audio.bitDepth': '位深度',
+      'audio.midiNoteLen': 'MIDI 音符时长',
+      'audio.midiNoteLen.actual': '实际时值',
+      'audio.midiNoteLen.fixed': '固定(八分音符)',
+      'audio.preview': '音符预览',
+      'audio.previewNotes': ' 个音符',
+
+      'sstv.label': '输入文本',
+      'sstv.placeholder': '在此输入要转换的文本...\n每两个字符会被编码为一个十六进制字节，映射到 SSTV Robot72 频率范围\n例如: Hello World',
+      'sstv.charDuration': '字符时长',
+      'sstv.volume': '音量',
+      'sstv.play': '▶ 播放',
+      'sstv.pause': '⏸ 暂停',
+      'sstv.stop': '⏹ 停止',
+      'sstv.export': '🔊 导出 WAV',
+      'sstv.refresh': '🔄 刷新编码',
+      'sstv.hexPreview': '十六进制编码预览',
+      'sstv.info': 'SSTV Robot72 Color 频率映射\n文本字符 → ASCII/Unicode 编码 → 十六进制 00~FF → 映射到 SSTV 亮度频率范围 1500 Hz (黑) ~ 2300 Hz (白)\n频率计算公式: freq = 1500 + (hexVal / 255) × 800',
+
+      'toast.noNotes': '没有可播放的音符',
+      'toast.exampleLoaded': '示例已加载',
+      'toast.fileImported': '文件已导入: ',
+      'toast.fileExported': '文件已导出',
+      'toast.noExportNotes': '没有可导出的音符，请先在 MIDI 编辑器中输入音符',
+      'toast.generatingWAV': '正在生成 WAV...',
+      'toast.wavExported': 'WAV 已导出',
+      'toast.wavFailed': 'WAV 导出失败: ',
+      'toast.midiExported': 'MIDI 已导出',
+      'toast.enterText': '请输入文本',
+      'toast.cannotEncode': '无法编码文本',
+      'toast.generatingWAV2': '正在生成 WAV (',
+      'toast.wavExported2': 'WAV 已导出 (',
+
+      'error.format': '格式错误：至少需要时值和音高',
+      'error.durFormat': '时值格式错误：需为 分子/分母（如 1/1, 1/8）',
+      'error.pitchFormat': '音高格式错误：需为 分子/分母（如 1/1, 4/3, 3/2）',
+      'error.sizeFormat': '大小格式错误：需为两位数 01~10',
+      'error.idFormat': '编号格式错误：需为两位数 00~99',
+      'error.nestedChord': '不支持嵌套和弦：在已有和弦块内遇到了新的 {',
+      'error.unmatchedEnd': '未匹配的和弦结束符：没有对应的 {',
+      'error.emptyChord': '空和弦块（没有音符）',
+      'error.unclosedChord': '和弦块未闭合：缺少 }',
+
+      'export.chord': ' [和弦]  ',
+      'export.notes': ' 音符, 最长 ',
+      'export.beats': ' 拍',
+      'export.notes2': ' 音符',
+      'export.notesCount': ' 音符, ',
+      'export.notesCount2': ' 音符, ',
+      'export.bpm': ' BPM)',
+      'export.s': 's)',
+      'export.notesParen': ' 音符)...',
+      'export.notesDone': ' 音符, ',
+      'export.done': 's)',
+
+      'format.help.line1': '每行一个音符，逗号分隔四个字段：',
+      'format.help.line2': ' 分数格式，默认 ',
+      'format.help.line3': '=四分音符 ',
+      'format.help.line4': '=八分音符 ',
+      'format.help.line5': '=三十二分音符',
+      'format.help.line6': ' 纯分数频率比，不限定律制',
+      'format.help.line7': '=基准 ',
+      'format.help.line8': '=纯四度 ',
+      'format.help.line9': '=纯五度 ',
+      'format.help.line10': '=大三度',
+      'format.help.line11': '，默认 ',
+      'format.help.line12': ' 两位数 ',
+      'format.help.line13': '，默认为空',
+      'format.help.line14': '从上到下依次演奏',
+      'format.help.chord': '和弦语法：',
+      'format.help.chord2': ' 和 ',
+      'format.help.chord3': ' 各自独占一行，块内音符同时演奏',
+      'format.help.freq': '基准频率：',
+      'format.help.freq2': ' 独占一行，影响后续所有音符',
+
+      'shortcut.space': ' 播放/暂停',
+      'shortcut.escape': ' 停止',
+      'shortcut.ctrlS': ' 导出文件',
+
+      'sstv.table.header': '<tr><th>#</th><th>字符</th><th>Hex</th><th>频率 (Hz)</th></tr>',
+      'sstv.table.headerEn': '<tr><th>#</th><th>Char</th><th>Hex</th><th>Freq (Hz)</th></tr>',
+
+      'scale.comment': '// 纯律自然大调音阶 (Just Intonation)',
+      'melody.comment': '// 小星星 (纯律)',
+      'chords.comment': '// 和弦示例：使用 { } 语法，大括号各自独占一行\n// 块内音符同时演奏，和弦时长取最长音符\n// 大三和弦\n{\n1/1,1/1,10,01\n1/1,5/4,09,02\n1/1,3/2,08,03\n}\n// 小三和弦\n{\n1/1,1/1,10,04\n1/1,6/5,09,05\n1/1,3/2,08,06\n}\n// 属七和弦\n{\n1/1,1/1,10,07\n1/1,5/4,09,08\n1/1,3/2,08,09\n1/1,7/4,07,10\n}\n// 柱式和弦（长音）\n{\n3/1,1/1,10,11\n3/1,5/4,09,12\n3/1,3/2,08,13\n3/1,2/1,07,14\n}'
+    },
+    en: {
+      'app.title': 'Tools',
+      'tab.midi': '🎵 MIDI Editor',
+      'tab.audio': '🔊 Audio Export',
+      'tab.sstv': '📝 Text to Audio',
+
+      'btn.play': '▶ Play',
+      'btn.pause': '⏸ Pause',
+      'btn.resume': '▶ Resume',
+      'btn.stop': '⏹ Stop',
+      'label.bpm': 'BPM',
+      'label.baseFreq': 'Base Freq',
+      'label.volume': 'Volume',
+      'label.waveform': 'Waveform',
+      'waveform.triangle': 'Triangle',
+      'waveform.sine': 'Sine',
+      'waveform.square': 'Square',
+      'waveform.sawtooth': 'Sawtooth',
+      'btn.scale': 'Just Scale',
+      'btn.melody': 'Melody',
+      'btn.chords': 'Chords',
+      'btn.import': '📂 Import',
+      'btn.export': '💾 Export',
+      'btn.clear': 'Clear',
+
+      'editor.placeholder': 'Enter MIDI text here. Format:\nDuration,Pitch,Size,ID\n\nExample:\n1/1,1/1,10,01\n1/1,9/8,10,02\n1/1,5/4,10,03\n1/1,4/3,10,04',
+
+      'sidebar.speed': 'Speed Control',
+      'sidebar.speedRate': 'Rate',
+      'sidebar.speedBPM': 'Effective BPM: ',
+      'sidebar.noteInfo': 'Current Note Info',
+      'sidebar.format': 'Format Help',
+      'sidebar.shortcuts': 'Shortcuts',
+
+      'info.labelLine': 'Line',
+      'info.labelDurFrac': 'Duration (frac)',
+      'info.labelDuration': 'Duration (beats)',
+      'info.labelPitchFrac': 'Pitch (frac)',
+      'info.labelPitchSimple': 'Pitch (simple)',
+      'info.labelFreq': 'Frequency',
+      'info.labelSize': 'Size (01-10)',
+      'info.labelId': 'ID',
+
+      'info.line': ' line',
+      'info.lineChord': ' [Chord]',
+      'info.notes': ' notes',
+      'info.chord': 'Chord',
+      'info.beats': ' beats',
+      'info.velocity': 'vel:',
+      'info.vel': 'vel:',
+
+      'status.ready': 'Ready',
+      'status.playing': 'Playing...',
+      'status.paused': 'Paused',
+      'status.notes': 'Notes: ',
+      'status.total': 'Total: ',
+      'status.errors': 'Errors: ',
+      'status.beats': 'beats',
+
+      'audio.title': 'Audio Export Tool',
+      'audio.subtitle': 'Export notes from the editor as WAV audio or MIDI files',
+      'audio.statNotes': 'Notes',
+      'audio.statBeats': 'Total (beats)',
+      'audio.statBPM': 'Effective BPM',
+      'audio.statDuration': 'Est. Duration',
+      'audio.exportWAV': '🔊 Export WAV',
+      'audio.exportMIDI': '🎹 Export MIDI',
+      'audio.refresh': '🔄 Refresh',
+      'audio.sampleRate': 'Sample Rate',
+      'audio.bitDepth': 'Bit Depth',
+      'audio.midiNoteLen': 'MIDI Note Len',
+      'audio.midiNoteLen.actual': 'Actual',
+      'audio.midiNoteLen.fixed': 'Fixed (8th note)',
+      'audio.preview': 'Note Preview',
+      'audio.previewNotes': ' notes',
+
+      'sstv.label': 'Enter Text',
+      'sstv.placeholder': 'Enter text to convert...\nEach two characters are encoded as one hex byte, mapped to SSTV Robot72 frequency range\nExample: Hello World',
+      'sstv.charDuration': 'Char Duration',
+      'sstv.volume': 'Volume',
+      'sstv.play': '▶ Play',
+      'sstv.pause': '⏸ Pause',
+      'sstv.stop': '⏹ Stop',
+      'sstv.export': '🔊 Export WAV',
+      'sstv.refresh': '🔄 Refresh',
+      'sstv.hexPreview': 'Hex Encoding Preview',
+      'sstv.info': 'SSTV Robot72 Color Frequency Mapping\nText chars → ASCII/Unicode → Hex 00~FF → mapped to SSTV luminance frequency range 1500 Hz (black) ~ 2300 Hz (white)\nFrequency formula: freq = 1500 + (hexVal / 255) × 800',
+
+      'toast.noNotes': 'No notes to play',
+      'toast.exampleLoaded': 'Example loaded',
+      'toast.fileImported': 'File imported: ',
+      'toast.fileExported': 'File exported',
+      'toast.noExportNotes': 'No notes to export. Please enter notes in the MIDI editor first.',
+      'toast.generatingWAV': 'Generating WAV...',
+      'toast.wavExported': 'WAV exported',
+      'toast.wavFailed': 'WAV export failed: ',
+      'toast.midiExported': 'MIDI exported',
+      'toast.enterText': 'Please enter text',
+      'toast.cannotEncode': 'Cannot encode text',
+      'toast.generatingWAV2': 'Generating WAV (',
+      'toast.wavExported2': 'WAV exported (',
+
+      'error.format': 'Format error: at least duration and pitch required',
+      'error.durFormat': 'Duration format error: must be numerator/denominator (e.g. 1/1, 1/8)',
+      'error.pitchFormat': 'Pitch format error: must be numerator/denominator (e.g. 1/1, 4/3, 3/2)',
+      'error.sizeFormat': 'Size format error: must be two digits 01~10',
+      'error.idFormat': 'ID format error: must be two digits 00~99',
+      'error.nestedChord': 'Nested chords not supported: encountered new { inside an existing chord block',
+      'error.unmatchedEnd': 'Unmatched chord end: no corresponding {',
+      'error.emptyChord': 'Empty chord block (no notes)',
+      'error.unclosedChord': 'Unclosed chord block: missing }',
+
+      'export.chord': ' [Chord]  ',
+      'export.notes': ' notes, max ',
+      'export.beats': ' beats',
+      'export.notes2': ' notes',
+      'export.notesCount': ' notes, ',
+      'export.notesCount2': ' notes, ',
+      'export.bpm': ' BPM)',
+      'export.s': 's)',
+      'export.notesParen': ' notes)...',
+      'export.notesDone': ' notes, ',
+      'export.done': 's)',
+
+      'format.help.line1': 'One note per line, four comma-separated fields:',
+      'format.help.line2': ' fraction format, default ',
+      'format.help.line3': '=quarter note ',
+      'format.help.line4': '=eighth note ',
+      'format.help.line5': '=32nd note',
+      'format.help.line6': ' pure ratio frequency, any tuning system',
+      'format.help.line7': '=unison ',
+      'format.help.line8': '=perfect fourth ',
+      'format.help.line9': '=perfect fifth ',
+      'format.help.line10': '=major third',
+      'format.help.line11': ', default ',
+      'format.help.line12': ' two digits ',
+      'format.help.line13': ', default empty',
+      'format.help.line14': 'Played top to bottom',
+      'format.help.chord': 'Chord syntax: ',
+      'format.help.chord2': ' and ',
+      'format.help.chord3': ' each on its own line, inner notes play simultaneously',
+      'format.help.freq': 'Base frequency: ',
+      'format.help.freq2': ' on its own line, affects all subsequent notes',
+
+      'shortcut.space': ' Play/Pause',
+      'shortcut.escape': ' Stop',
+      'shortcut.ctrlS': ' Export file',
+
+      'sstv.table.header': '<tr><th>#</th><th>Char</th><th>Hex</th><th>Freq (Hz)</th></tr>',
+      'sstv.table.headerEn': '<tr><th>#</th><th>Char</th><th>Hex</th><th>Freq (Hz)</th></tr>',
+
+      'scale.comment': '// Just Intonation Major Scale',
+      'melody.comment': '// Twinkle Twinkle Little Star (Just Intonation)',
+      'chords.comment': '// Chord examples: use { } syntax, each brace on its own line\n// Inner notes play simultaneously, chord duration = longest note\n// Major triad\n{\n1/1,1/1,10,01\n1/1,5/4,09,02\n1/1,3/2,08,03\n}\n// Minor triad\n{\n1/1,1/1,10,04\n1/1,6/5,09,05\n1/1,3/2,08,06\n}\n// Dominant seventh\n{\n1/1,1/1,10,07\n1/1,5/4,09,08\n1/1,3/2,08,09\n1/1,7/4,07,10\n}\n// Block chords (long notes)\n{\n3/1,1/1,10,11\n3/1,5/4,09,12\n3/1,3/2,08,13\n3/1,2/1,07,14\n}'
+    }
+  };
+
+  var currentLang = 'zh';
+
+  window._t = function(key) {
+    var dict = I18N[currentLang];
+    return dict[key] !== undefined ? dict[key] : key;
+  };
+
+  window.setLanguage = function(lang) {
+    currentLang = lang;
+    localStorage.setItem('midi-tools-lang', lang);
+
+    // Update language buttons
+    document.querySelectorAll('.lang-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+    });
+
+    // Update all data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n');
+      var val = I18N[lang][key];
+      if (val !== undefined) el.textContent = val;
+    });
+
+    // Update placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      var val = I18N[lang][key];
+      if (val !== undefined) el.placeholder = val;
+    });
+
+    // Update document title
+    document.title = 'MIDI ' + I18N[lang]['app.title'];
+
+    // Refresh dynamic UI text
+    if (window._midiRefreshLang) window._midiRefreshLang();
+  };
+
+  // Load saved language preference
+  var savedLang = localStorage.getItem('midi-tools-lang');
+  if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
+    currentLang = savedLang;
+  }
+})();
+
+/* ═══════════════════════════════════════════
    标签切换
    ═══════════════════════════════════════════ */
 (function() {
@@ -17,19 +380,14 @@
 
       if (tab === 'midi') {
         body.classList.remove('dir-mode');
-        // 重新触发编辑器布局更新
         if (window._midiResizeHandler) window._midiResizeHandler();
       } else if (tab === 'sstv') {
         body.classList.add('dir-mode');
-        // 停止 MIDI 播放
         if (window.midiStop) window.midiStop();
-        // 刷新 SSTV 编码预览
         if (window.sstvRefreshHex) window.sstvRefreshHex();
       } else {
         body.classList.add('dir-mode');
-        // 停止 MIDI 播放
         if (window.midiStop) window.midiStop();
-        // 自动刷新导出预览
         if (window.audioExportRefresh) window.audioExportRefresh();
       }
     });
@@ -42,7 +400,6 @@
 (function() {
   'use strict';
 
-  // ── DOM refs ──
   var textInput = document.getElementById('sstvTextInput');
   var btnPlay = document.getElementById('sstvBtnPlay');
   var btnStop = document.getElementById('sstvBtnStop');
@@ -52,7 +409,6 @@
   var freqTable = document.getElementById('sstvFreqTable');
   var freqTableBody = document.getElementById('sstvFreqTableBody');
 
-  // ── State ──
   var audioCtx = null;
   var isPlaying = false;
   var charDuration = 100;
@@ -60,7 +416,6 @@
   var scheduledNodes = [];
   var toastTimer = null;
 
-  // ── SSTV Robot72 Color frequency mapping ──
   var FREQ_BLACK = 1500;
   var FREQ_WHITE = 2300;
 
@@ -117,18 +472,18 @@
 
   function play() {
     var text = textInput.value.trim();
-    if (!text) { showToast('请输入文本'); return; }
+    if (!text) { showToast(window._t('toast.enterText')); return; }
 
     stopAllNodes();
 
     var bytes = textToHexBytes(text);
-    if (bytes.length === 0) { showToast('无法编码文本'); return; }
+    if (bytes.length === 0) { showToast(window._t('toast.cannotEncode')); return; }
 
     updateHexPreview(bytes);
 
     var ctx = getAudioContext();
     isPlaying = true;
-    btnPlay.innerHTML = '⏸ 暂停';
+    btnPlay.innerHTML = window._t('sstv.pause');
     btnPlay.classList.add('accent2'); btnPlay.classList.remove('primary');
     btnStop.disabled = false;
     btnExport.disabled = true;
@@ -162,7 +517,7 @@
   function stopPlayback() {
     isPlaying = false;
     stopAllNodes();
-    btnPlay.innerHTML = '▶ 播放';
+    btnPlay.innerHTML = window._t('sstv.play');
     btnPlay.classList.add('primary'); btnPlay.classList.remove('accent2');
     btnStop.disabled = true;
     btnExport.disabled = false;
@@ -244,10 +599,10 @@
 
   function exportWAV() {
     var text = textInput.value.trim();
-    if (!text) { showToast('请输入文本'); return; }
+    if (!text) { showToast(window._t('toast.enterText')); return; }
 
     var bytes = textToHexBytes(text);
-    if (bytes.length === 0) { showToast('无法编码文本'); return; }
+    if (bytes.length === 0) { showToast(window._t('toast.cannotEncode')); return; }
 
     var sampleRate = 44100;
     var durSec = charDuration / 1000;
@@ -275,7 +630,7 @@
       osc.stop(t + durSec + 0.01);
     }
 
-    showToast('正在生成 WAV...');
+    showToast(window._t('toast.generatingWAV'));
     offlineCtx.startRendering().then(function(rendered) {
       var wavBuf = encodeWAV(rendered.getChannelData(0), sampleRate);
       var blob = new Blob([wavBuf], { type: 'audio/wav' });
@@ -285,9 +640,9 @@
       a.download = 'sstv-text-' + new Date().toISOString().slice(0, 10) + '.wav';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('WAV 已导出 (' + bytes.length + ' 字节, ' + (bytes.length * durSec).toFixed(1) + 's)');
+      showToast(window._t('toast.wavExported2') + bytes.length + ' bytes, ' + (bytes.length * durSec).toFixed(1) + 's)');
     }).catch(function(e) {
-      showToast('导出失败: ' + e.message);
+      showToast(window._t('toast.wavFailed') + e.message);
       console.error(e);
     });
   }
@@ -300,11 +655,10 @@
     toastTimer = setTimeout(function() { toast.classList.remove('show'); toastTimer = null; }, 2000);
   }
 
-  // ── Events ──
+  // Events
   textInput.addEventListener('input', function() { refreshHex(); });
 
   document.addEventListener('keydown', function(e) {
-    // 只在 SSTV 标签页激活时处理键盘事件
     if (!document.getElementById('tab-sstv').classList.contains('active')) return;
     if (e.key === ' ' && document.activeElement !== textInput) {
       e.preventDefault(); togglePlay();
@@ -314,7 +668,7 @@
     }
   });
 
-  // ── Expose to global ──
+  // Expose to global
   window.sstvUpdateDuration = updateDuration;
   window.sstvUpdateVolume = updateVolume;
   window.sstvTogglePlay = togglePlay;
@@ -322,7 +676,7 @@
   window.sstvRefreshHex = refreshHex;
   window.sstvExportWAV = exportWAV;
 
-  // ── Init ──
+  // Init
   refreshHex();
 })();
 
@@ -390,7 +744,8 @@
 
   function scheduleNote(note, time) {
     var ctx = getAudioContext();
-    var freq = ratioToFreq(note.pitchNum, note.pitchDen);
+    var bf = (note.noteBaseFreq !== undefined) ? note.noteBaseFreq : baseFreq;
+    var freq = bf * (note.pitchNum / note.pitchDen);
     var effBPM = getEffectiveBPM();
 
     var osc = ctx.createOscillator();
@@ -445,20 +800,20 @@
   function parseNoteLine(line, i) {
     var parts = line.split(',').map(function(s) { return s.trim(); });
     if (parts.length < 2) {
-      parseErrors.push({ line: i, msg: '格式错误：至少需要时值和音高' });
+      parseErrors.push({ line: i, msg: window._t('error.format') });
       return null;
     }
 
     var durFrac = parseFraction(parts[0], 1, 1);
     if (!durFrac) {
-      parseErrors.push({ line: i, msg: '时值格式错误：需为 分子/分母（如 1/1, 1/8）' });
+      parseErrors.push({ line: i, msg: window._t('error.durFormat') });
       return null;
     }
     var duration = durFrac.num / durFrac.den;
 
     var pitchFrac = parseFraction(parts[1], 1, 1);
     if (!pitchFrac) {
-      parseErrors.push({ line: i, msg: '音高格式错误：需为 分子/分母（如 1/1, 4/3, 3/2）' });
+      parseErrors.push({ line: i, msg: window._t('error.pitchFormat') });
       return null;
     }
     var freq = ratioToFreq(pitchFrac.num, pitchFrac.den);
@@ -472,7 +827,7 @@
       if (!isNaN(sizeNum) && sizeNum >= 1 && sizeNum <= 10 && /^\d{2}$/.test(sizeRaw)) {
         size = sizeNum; sizeStr = sizeRaw;
       } else {
-        parseErrors.push({ line: i, msg: '大小格式错误：需为两位数 01~10' });
+        parseErrors.push({ line: i, msg: window._t('error.sizeFormat') });
         return null;
       }
     }
@@ -483,7 +838,7 @@
       var idRaw = parts[3];
       if (/^\d{2}$/.test(idRaw)) { noteId = idRaw; }
       else {
-        parseErrors.push({ line: i, msg: '编号格式错误：需为两位数 00~99' });
+        parseErrors.push({ line: i, msg: window._t('error.idFormat') });
         return null;
       }
     }
@@ -493,7 +848,8 @@
       line: i, duration: duration, durFrac: durFrac.str, durNum: durFrac.num, durDen: durFrac.den,
       pitchFrac: pitchFrac.str, pitchNum: pitchFrac.num, pitchDen: pitchFrac.den,
       pitchFracSimple: simplified.num + '/' + simplified.den, freq: freq,
-      size: size, sizeStr: sizeStr, velocity: velocity, id: noteId, raw: line
+      size: size, sizeStr: sizeStr, velocity: velocity, id: noteId, raw: line,
+      noteBaseFreq: baseFreq
     };
   }
 
@@ -510,10 +866,9 @@
       var line = lines[i].trim();
       if (line === '' || line.indexOf('//') === 0 || line.indexOf('#') === 0) continue;
 
-      // 和弦开始标记 { 独占一行
       if (line === '{') {
         if (inChord) {
-          parseErrors.push({ line: i, msg: '不支持嵌套和弦：在已有和弦块内遇到了新的 {' });
+          parseErrors.push({ line: i, msg: window._t('error.nestedChord') });
           continue;
         }
         inChord = true;
@@ -522,14 +877,13 @@
         continue;
       }
 
-      // 和弦结束标记 } 独占一行
       if (line === '}') {
         if (!inChord) {
-          parseErrors.push({ line: i, msg: '未匹配的和弦结束符：没有对应的 {' });
+          parseErrors.push({ line: i, msg: window._t('error.unmatchedEnd') });
           continue;
         }
         if (chordNotes.length === 0) {
-          parseErrors.push({ line: i, msg: '空和弦块（没有音符）' });
+          parseErrors.push({ line: i, msg: window._t('error.emptyChord') });
           inChord = false;
           continue;
         }
@@ -551,7 +905,6 @@
         continue;
       }
 
-      // 检查基准频率标记 {R+频率+HZ}
       var freqMatch = line.match(/^\{R\+(\d+(?:\.\d+)?)\+HZ\}$/);
       if (freqMatch) {
         var newFreq = parseFloat(freqMatch[1]);
@@ -563,7 +916,6 @@
         continue;
       }
 
-      // 解析普通音符行
       var noteObj = parseNoteLine(line, i);
       if (!noteObj) continue;
 
@@ -574,9 +926,8 @@
       }
     }
 
-    // 检查未闭合和弦
     if (inChord) {
-      parseErrors.push({ line: chordOpenLine, msg: '和弦块未闭合：缺少 }' });
+      parseErrors.push({ line: chordOpenLine, msg: window._t('error.unclosedChord') });
     }
 
     updateGutter(); updateStatusBar(); updateHighlightOverlay();
@@ -587,7 +938,6 @@
     var lines = editor.value.split('\n');
     var errorLines = {};
     for (var i = 0; i < parseErrors.length; i++) errorLines[parseErrors[i].line] = true;
-    // 标记和弦括号行
     var chordMarkers = {};
     for (var i = 0; i < parsedNotes.length; i++) {
       if (parsedNotes[i].type === 'chord') {
@@ -627,7 +977,6 @@
     if (index >= 0 && index < parsedNotes.length) {
       var item = parsedNotes[index];
       if (item.type === 'chord') {
-        // 和弦：高亮第一个音符行（光标停在和弦第一行），括号行也标记
         if (item.firstNoteLine < rows.length) rows[item.firstNoteLine].classList.add('playing');
         if (item.firstNoteLine < gutterLines.length) gutterLines[item.firstNoteLine].classList.add('playing');
         if (item.line < rows.length) rows[item.line].classList.add('chord-playing');
@@ -659,22 +1008,22 @@
 
   function updateNoteInfo(note, index) {
     if (note.type === 'chord') {
-      document.getElementById('infoLine').textContent = (index + 1) + ' / ' + parsedNotes.length + ' [和弦]';
-      document.getElementById('infoDurFrac').textContent = note.duration.toFixed(3) + ' 拍';
-      document.getElementById('infoDuration').textContent = note.notes.length + ' 个音符';
-      document.getElementById('infoPitchFrac').textContent = '和弦';
-      document.getElementById('infoPitchSimple').textContent = '—';
-      document.getElementById('infoFreq').textContent = '—';
-      document.getElementById('infoSize').textContent = '—';
-      document.getElementById('infoId').textContent = '—';
+      document.getElementById('infoLine').textContent = (index + 1) + ' / ' + parsedNotes.length + window._t('info.lineChord');
+      document.getElementById('infoDurFrac').textContent = note.duration.toFixed(3) + window._t('info.beats');
+      document.getElementById('infoDuration').textContent = note.notes.length + window._t('info.notes');
+      document.getElementById('infoPitchFrac').textContent = window._t('info.chord');
+      document.getElementById('infoPitchSimple').textContent = '\u2014';
+      document.getElementById('infoFreq').textContent = '\u2014';
+      document.getElementById('infoSize').textContent = '\u2014';
+      document.getElementById('infoId').textContent = '\u2014';
     } else {
       document.getElementById('infoLine').textContent = (index + 1) + ' / ' + parsedNotes.length;
       document.getElementById('infoDurFrac').textContent = note.durFrac;
-      document.getElementById('infoDuration').textContent = note.duration.toFixed(3) + ' 拍';
+      document.getElementById('infoDuration').textContent = note.duration.toFixed(3) + window._t('info.beats');
       document.getElementById('infoPitchFrac').textContent = note.pitchFrac;
-      document.getElementById('infoPitchSimple').textContent = note.pitchFrac !== note.pitchFracSimple ? note.pitchFracSimple : '—';
+      document.getElementById('infoPitchSimple').textContent = note.pitchFrac !== note.pitchFracSimple ? note.pitchFracSimple : '\u2014';
       document.getElementById('infoFreq').textContent = note.freq.toFixed(2) + ' Hz';
-      document.getElementById('infoSize').textContent = note.sizeStr + ' (力度:' + note.velocity + ')';
+      document.getElementById('infoSize').textContent = note.sizeStr + ' (' + window._t('info.velocity') + note.velocity + ')';
       document.getElementById('infoId').textContent = note.id || '-';
     }
   }
@@ -695,28 +1044,28 @@
       }
       totalBeats += parsedNotes[i].duration;
     }
-    noteCount.textContent = '音符: ' + totalNotes;
-    totalDuration.textContent = '总时长: ' + totalBeats.toFixed(1) + '拍';
+    noteCount.textContent = window._t('status.notes') + totalNotes;
+    totalDuration.textContent = window._t('status.total') + totalBeats.toFixed(1) + window._t('status.beats');
     if (parseErrors.length > 0) {
       errorCount.style.display = 'inline';
-      errorCount.textContent = '错误: ' + parseErrors.length;
+      errorCount.textContent = window._t('status.errors') + parseErrors.length;
     } else { errorCount.style.display = 'none'; }
   }
 
   function setStatus(state) {
     statusIndicator.className = 'status-indicator ' + state;
-    if (state === 'ready') statusText.textContent = '就绪';
-    else if (state === 'playing') statusText.textContent = '演奏中...';
-    else if (state === 'paused') statusText.textContent = '已暂停';
+    if (state === 'ready') statusText.textContent = window._t('status.ready');
+    else if (state === 'playing') statusText.textContent = window._t('status.playing');
+    else if (state === 'paused') statusText.textContent = window._t('status.paused');
   }
 
   function play() {
     parseEditor();
-    if (parsedNotes.length === 0) { showToast('没有可播放的音符'); return; }
+    if (parsedNotes.length === 0) { showToast(window._t('toast.noNotes')); return; }
 
     var ctx = getAudioContext();
     isPlaying = true; isPaused = false;
-    btnPlay.innerHTML = '⏸ 暂停';
+    btnPlay.innerHTML = window._t('btn.pause');
     btnPlay.classList.add('accent2'); btnPlay.classList.remove('primary');
     btnStop.disabled = false;
     setStatus('playing');
@@ -730,7 +1079,6 @@
     for (var i = 0; i < parsedNotes.length; i++) {
       var item = parsedNotes[i];
       if (item.type === 'chord') {
-        // 和弦：所有音符同时启动
         for (var ci = 0; ci < item.notes.length; ci++) {
           var cn = item.notes[ci];
           var scheduled = scheduleNote(cn, now + cumulativeTime);
@@ -761,7 +1109,6 @@
     var ctx = getAudioContext();
     var now = ctx.currentTime;
 
-    // 从头部扫描：找到第一个仍在播放的调度条目，其 noteIndex 即为当前音符
     var foundCurrent = false;
     for (var i = 0; i < scheduledNotes.length; i++) {
       var s = scheduledNotes[i];
@@ -790,7 +1137,7 @@
     }
     scheduledNotes = [];
     pauseTime = audioCtx.currentTime - startTime;
-    btnPlay.innerHTML = '▶ 继续';
+    btnPlay.innerHTML = window._t('btn.resume');
     btnPlay.classList.add('primary'); btnPlay.classList.remove('accent2');
     btnStop.disabled = false;
     setStatus('paused');
@@ -803,7 +1150,7 @@
 
     var ctx = getAudioContext();
     isPlaying = true; isPaused = false;
-    btnPlay.innerHTML = '⏸ 暂停';
+    btnPlay.innerHTML = window._t('btn.pause');
     btnPlay.classList.add('accent2'); btnPlay.classList.remove('primary');
     btnStop.disabled = false;
     setStatus('playing');
@@ -855,7 +1202,7 @@
       try { scheduledNotes[i].osc2.stop(); } catch(e) {}
     }
     scheduledNotes = []; currentNoteIndex = 0;
-    btnPlay.innerHTML = '▶ 播放';
+    btnPlay.innerHTML = window._t('btn.play');
     btnPlay.classList.add('primary'); btnPlay.classList.remove('accent2');
     btnStop.disabled = true;
     clearHighlight(); setStatus('ready');
@@ -863,7 +1210,7 @@
 
   function updateSpeedDisplay() {
     var eff = getEffectiveBPM();
-    document.getElementById('speedBPM').textContent = '有效 BPM: ' + eff;
+    document.getElementById('speedBPM').textContent = window._t('sidebar.speedBPM') + eff;
     document.getElementById('bpmDisplay').textContent = bpm;
   }
 
@@ -915,16 +1262,16 @@
     stopPlayback();
     var content = '';
     if (type === 'scale') {
-      content = '// 纯律自然大调音阶 (Just Intonation)\n1/1,1/1,10,01\n1/1,9/8,10,02\n1/1,5/4,10,03\n1/1,4/3,10,04\n1/1,3/2,10,05\n1/1,5/3,10,06\n1/1,15/8,10,07\n1/1,2/1,10,08';
+      content = window._t('scale.comment') + '\n1/1,1/1,10,01\n1/1,9/8,10,02\n1/1,5/4,10,03\n1/1,4/3,10,04\n1/1,3/2,10,05\n1/1,5/3,10,06\n1/1,15/8,10,07\n1/1,2/1,10,08';
     } else if (type === 'melody') {
-      content = '// 小星星 (纯律)\n1/1,1/1,10,01\n1/1,1/1,10,02\n1/1,3/2,09,03\n1/1,3/2,09,04\n1/1,5/3,08,05\n1/1,5/3,08,06\n2/1,3/2,08,07\n1/1,4/3,08,08\n1/1,4/3,08,09\n1/1,5/4,09,10\n1/1,5/4,09,11\n1/1,9/8,10,12\n1/1,9/8,10,13\n2/1,1/1,10,14';
+      content = window._t('melody.comment') + '\n1/1,1/1,10,01\n1/1,1/1,10,02\n1/1,3/2,09,03\n1/1,3/2,09,04\n1/1,5/3,08,05\n1/1,5/3,08,06\n2/1,3/2,08,07\n1/1,4/3,08,08\n1/1,4/3,08,09\n1/1,5/4,09,10\n1/1,5/4,09,11\n1/1,9/8,10,12\n1/1,9/8,10,13\n2/1,1/1,10,14';
     } else if (type === 'chords') {
-      content = '// 和弦示例：使用 { } 语法，大括号各自独占一行\n// 块内音符同时演奏，和弦时长取最长音符\n// 大三和弦\n{\n1/1,1/1,10,01\n1/1,5/4,09,02\n1/1,3/2,08,03\n}\n// 小三和弦\n{\n1/1,1/1,10,04\n1/1,6/5,09,05\n1/1,3/2,08,06\n}\n// 属七和弦\n{\n1/1,1/1,10,07\n1/1,5/4,09,08\n1/1,3/2,08,09\n1/1,7/4,07,10\n}\n// 柱式和弦（长音）\n{\n3/1,1/1,10,11\n3/1,5/4,09,12\n3/1,3/2,08,13\n3/1,2/1,07,14\n}';
+      content = window._t('chords.comment');
     }
     editor.value = content;
     parseEditor();
     editor.focus();
-    showToast('示例已加载');
+    showToast(window._t('toast.exampleLoaded'));
   };
 
   window.midiClearEditor = function() {
@@ -944,7 +1291,7 @@
       stopPlayback();
       editor.value = e.target.result;
       parseEditor();
-      showToast('文件已导入: ' + file.name);
+      showToast(window._t('toast.fileImported') + file.name);
     };
     reader.readAsText(file);
     event.target.value = '';
@@ -959,7 +1306,7 @@
     a.download = 'midi-score-' + new Date().toISOString().slice(0,10) + '.txt';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('文件已导出');
+    showToast(window._t('toast.fileExported'));
   };
 
   function showToast(msg) {
@@ -969,7 +1316,154 @@
     toastTimer = setTimeout(function() { toast.classList.remove('show'); toastTimer = null; }, 2000);
   }
 
-  // 事件监听
+  // Refresh language-dependent UI
+  function refreshLangUI() {
+    // Update editor placeholder
+    editor.placeholder = window._t('editor.placeholder');
+    // Update status bar
+    updateStatusBar();
+    // Update speed display
+    updateSpeedDisplay();
+    // Update toolbar labels
+    var labels = document.querySelectorAll('#tab-midi .midi-toolbar label');
+    if (labels.length >= 5) {
+      labels[0].textContent = window._t('label.bpm');
+      labels[1].textContent = window._t('label.baseFreq');
+      labels[2].textContent = window._t('label.volume');
+      labels[3].textContent = window._t('label.waveform');
+    }
+    // Update waveform select options
+    var waveSelect = document.getElementById('waveSelect');
+    if (waveSelect) {
+      waveSelect.options[0].textContent = window._t('waveform.triangle');
+      waveSelect.options[1].textContent = window._t('waveform.sine');
+      waveSelect.options[2].textContent = window._t('waveform.square');
+      waveSelect.options[3].textContent = window._t('waveform.sawtooth');
+    }
+    // Update button text
+    if (!isPlaying && !isPaused) btnPlay.innerHTML = window._t('btn.play');
+    else if (isPaused) btnPlay.innerHTML = window._t('btn.resume');
+    else btnPlay.innerHTML = window._t('btn.pause');
+    btnStop.innerHTML = window._t('btn.stop');
+    // Update status
+    if (isPlaying) setStatus('playing');
+    else if (isPaused) setStatus('paused');
+    else setStatus('ready');
+    // Update sidebar headings
+    updateSidebarHeadings();
+    // Update help box
+    updateHelpBox();
+    // Update audio export tab
+    updateAudioExportLabels();
+    // Update SSTV tab
+    updateSSTVLabels();
+  }
+
+  function updateSidebarHeadings() {
+    var h3s = document.querySelectorAll('#tab-midi .sidebar h3');
+    if (h3s.length >= 4) {
+      h3s[0].textContent = window._t('sidebar.speed');
+      h3s[1].textContent = window._t('sidebar.noteInfo');
+      h3s[2].textContent = window._t('sidebar.format');
+      h3s[3].textContent = window._t('sidebar.shortcuts');
+    }
+    // Update note info labels
+    document.getElementById('infoLine').parentElement.querySelector('.label').textContent = window._t('info.labelLine');
+    var rows = document.querySelectorAll('.note-info-card .row');
+    if (rows.length >= 8) {
+      rows[0].querySelector('.label').textContent = window._t('info.labelLine');
+      rows[1].querySelector('.label').textContent = window._t('info.labelDurFrac');
+      rows[2].querySelector('.label').textContent = window._t('info.labelDuration');
+      rows[3].querySelector('.label').textContent = window._t('info.labelPitchFrac');
+      rows[4].querySelector('.label').textContent = window._t('info.labelPitchSimple');
+      rows[5].querySelector('.label').textContent = window._t('info.labelFreq');
+      rows[6].querySelector('.label').textContent = window._t('info.labelSize');
+      rows[7].querySelector('.label').textContent = window._t('info.labelId');
+    }
+    // Speed panel
+    var speedRow = document.querySelector('.speed-row span');
+    if (speedRow) speedRow.textContent = window._t('sidebar.speedRate');
+    updateSpeedDisplay();
+  }
+
+  function updateHelpBox() {
+    var helpBox = document.querySelector('#tab-midi .help-box');
+    if (!helpBox) return;
+    var t = window._t;
+    helpBox.innerHTML =
+      '<p>' + t('format.help.line1') + '</p>' +
+      '<p><code>' + t('info.labelDurFrac') + '</code>' + t('format.help.line2') + '<code>1/1</code></p>' +
+      '<p style="font-size:0.7rem;margin-left:8px;"><code>1/1</code>' + t('format.help.line3') + '<code>1/2</code>' + t('format.help.line4') + '<code>1/8</code>' + t('format.help.line5') + '</p>' +
+      '<p><code>' + t('info.labelPitchFrac') + '</code>' + t('format.help.line6') + '</p>' +
+      '<p style="font-size:0.7rem;margin-left:8px;"><code>1/1</code>' + t('format.help.line7') + '<code>4/3</code>' + t('format.help.line8') + '<code>3/2</code>' + t('format.help.line9') + '<code>5/4</code>' + t('format.help.line10') + '</p>' +
+      '<p><code>' + t('info.labelSize') + '</code> <code>01</code>~<code>10</code>' + t('format.help.line11') + '<code>10</code></p>' +
+      '<p><code>' + t('info.labelId') + '</code>' + t('format.help.line12') + '<code>00</code>~<code>99</code>' + t('format.help.line13') + '</p>' +
+      '<p style="margin-top:6px;">' + t('format.help.line14') + '</p>' +
+      '<p style="margin-top:8px;color:var(--accent2);">' + t('format.help.chord') + '<code>{</code>' + t('format.help.chord2') + '<code>}</code>' + t('format.help.chord3') + '</p>' +
+      '<p style="font-size:0.7rem;margin-left:8px;color:var(--accent2);">' + t('format.help.freq') + '<code>{R+' + t('info.labelFreq') + '+HZ}</code>' + t('format.help.freq2') + '</p>';
+  }
+
+  function updateAudioExportLabels() {
+    var t = window._t;
+    var audioTitle = document.querySelector('#tab-dir h1 span');
+    if (audioTitle) audioTitle.textContent = t('audio.title').split(' ')[0] || 'Audio';
+    var subtitle = document.querySelector('#tab-dir .subtitle');
+    if (subtitle) subtitle.textContent = t('audio.subtitle');
+    var statLabels = document.querySelectorAll('#tab-dir .stat-label');
+    if (statLabels.length >= 4) {
+      statLabels[0].textContent = t('audio.statNotes');
+      statLabels[1].textContent = t('audio.statBeats');
+      statLabels[2].textContent = t('audio.statBPM');
+      statLabels[3].textContent = t('audio.statDuration');
+    }
+    var previewTitle = document.getElementById('previewTitle');
+    if (previewTitle) previewTitle.textContent = t('audio.preview');
+    var optLabels = document.querySelectorAll('#tab-dir .options span');
+    if (optLabels.length >= 3) {
+      optLabels[0].textContent = t('audio.sampleRate');
+      optLabels[1].textContent = t('audio.bitDepth');
+      optLabels[2].textContent = t('audio.midiNoteLen');
+    }
+    var optMidi = document.getElementById('optMidiNoteLen');
+    if (optMidi) {
+      optMidi.options[0].textContent = t('audio.midiNoteLen.actual');
+      optMidi.options[1].textContent = t('audio.midiNoteLen.fixed');
+    }
+  }
+
+  function updateSSTVLabels() {
+    var t = window._t;
+    var sstvLabel = document.querySelector('#tab-sstv .sstv-editor-section label');
+    if (sstvLabel) sstvLabel.textContent = t('sstv.label');
+    var sstvTA = document.getElementById('sstvTextInput');
+    if (sstvTA) sstvTA.placeholder = t('sstv.placeholder');
+    var sstvOptLabels = document.querySelectorAll('#tab-sstv .sstv-options label');
+    if (sstvOptLabels.length >= 2) {
+      sstvOptLabels[0].textContent = t('sstv.charDuration');
+      sstvOptLabels[1].textContent = t('sstv.volume');
+    }
+    var sstvHexLabel = document.querySelector('#tab-sstv .sstv-hex-label');
+    if (sstvHexLabel) sstvHexLabel.textContent = t('sstv.hexPreview');
+    var sstvInfo = document.querySelector('#tab-sstv .sstv-info-card');
+    if (sstvInfo) {
+      sstvInfo.innerHTML = '<strong>' + t('sstv.hexPreview') + '</strong><br>' + t('sstv.info').replace(/\n/g, '<br>');
+    }
+    // Update SSTV button text
+    if (document.getElementById('sstvBtnPlay')) {
+      var sstvBtnPlay = document.getElementById('sstvBtnPlay');
+      var sstvIsPlaying = sstvBtnPlay.classList.contains('accent2');
+      sstvBtnPlay.innerHTML = sstvIsPlaying ? t('sstv.pause') : t('sstv.play');
+    }
+    document.getElementById('sstvBtnStop').innerHTML = t('sstv.stop');
+    document.getElementById('sstvBtnExport').innerHTML = t('sstv.export');
+    // Update SSTV freq table header
+    var freqTableThead = document.querySelector('#sstvFreqTable thead');
+    if (freqTableThead) freqTableThead.innerHTML = t('sstv.table.header');
+  }
+
+  window._midiRefreshLang = refreshLangUI;
+
+  // Event listeners
   editor.addEventListener('input', function() { parseEditor(); });
   editor.addEventListener('scroll', function() {
     gutter.scrollTop = editor.scrollTop;
@@ -1007,7 +1501,7 @@
     if (audioCtx) audioCtx.close();
   });
 
-  // 恢复保存的内容
+  // Restore saved content
   var saved = localStorage.getItem('midi-tools-editor-content');
   if (saved) { editor.value = saved; }
   else { window.midiLoadExample('scale'); }
@@ -1023,11 +1517,10 @@
   parseEditor();
   updateHighlightOverlay();
 
-  // 暴露到全局
+  // Expose to global
   window.midiTogglePlay = togglePlay;
   window.midiStop = stopPlayback;
 
-  // 暴露 MIDI 编辑器数据供音频导出使用
   window.midiEditor = {
     getParsedNotes: function() { parseEditor(); return parsedNotes; },
     getBPM: function() { return bpm; },
@@ -1090,7 +1583,6 @@
     return getBPM() * getSpeed();
   }
 
-  /* ── 刷新导出预览 ── */
   window.audioExportRefresh = function() {
     var notes = getNotes();
     var effBPM = getEffBPM();
@@ -1120,13 +1612,14 @@
       return;
     }
     previewBox.classList.add('show');
-    previewCount.textContent = totalNotes + ' 个音符';
+    previewCount.textContent = totalNotes + window._t('audio.previewNotes');
 
     var lines = [];
+    var t = window._t;
     for (var i = 0; i < notes.length; i++) {
       var n = notes[i];
       if (n.type === 'chord') {
-        lines.push((i + 1) + '. [和弦]  ' + n.notes.length + ' 音符, 最长 ' + n.duration.toFixed(2) + ' 拍');
+        lines.push((i + 1) + '.' + t('export.chord') + n.notes.length + t('export.notes') + n.duration.toFixed(2) + t('export.beats'));
         for (var ci = 0; ci < n.notes.length; ci++) {
           var cn = n.notes[ci];
           lines.push('    ' + cn.durFrac + ', ' + cn.pitchFrac + ', ' + cn.sizeStr + (cn.id ? ', ' + cn.id : ''));
@@ -1138,7 +1631,6 @@
     previewContent.textContent = lines.join('\n');
   };
 
-  /* ── WAV 编码 ── */
   function encodeWAV(samples, sampleRate, bitDepth) {
     var bytesPerSample = bitDepth / 8;
     var numChannels = 1;
@@ -1182,11 +1674,10 @@
     return buf;
   }
 
-  /* ── 导出 WAV ── */
   window.exportWAV = async function() {
     var notes = getNotes();
     if (notes.length === 0) {
-      showToast('没有可导出的音符，请先在 MIDI 编辑器中输入音符');
+      showToast(window._t('toast.noExportNotes'));
       return;
     }
 
@@ -1202,7 +1693,7 @@
     for (var i = 0; i < notes.length; i++) totalBeats += notes[i].duration;
     var totalDuration = totalBeats * beatDuration + 0.5;
 
-    showToast('正在生成 WAV (' + notes.length + ' 音符)...');
+    showToast(window._t('toast.generatingWAV2') + notes.length + window._t('export.notesParen'));
 
     var offlineCtx = new OfflineAudioContext(1, Math.ceil(totalDuration * sampleRate), sampleRate);
 
@@ -1210,10 +1701,10 @@
     for (var i = 0; i < notes.length; i++) {
       var note = notes[i];
       if (note.type === 'chord') {
-        // 和弦：所有音符同时启动
         for (var ci = 0; ci < note.notes.length; ci++) {
           var cn = note.notes[ci];
-          var freq = baseFreq * (cn.pitchNum / cn.pitchDen);
+          var bf = (cn.noteBaseFreq !== undefined) ? cn.noteBaseFreq : baseFreq;
+          var freq = bf * (cn.pitchNum / cn.pitchDen);
           var noteDuration = cn.duration * beatDuration;
           var velocity = cn.velocity / 100;
           var vol = velocity * volume;
@@ -1250,7 +1741,8 @@
         }
         cumulativeTime += note.duration * beatDuration;
       } else {
-        var freq = baseFreq * (note.pitchNum / note.pitchDen);
+        var bf = (note.noteBaseFreq !== undefined) ? note.noteBaseFreq : baseFreq;
+        var freq = bf * (note.pitchNum / note.pitchDen);
         var noteDuration = note.duration * beatDuration;
         var velocity = note.velocity / 100;
         var vol = velocity * volume;
@@ -1300,14 +1792,13 @@
       a.download = 'midi-export-' + new Date().toISOString().slice(0, 10) + '.wav';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('WAV 已导出 (' + notes.length + ' 音符, ' + totalDuration.toFixed(1) + 's)');
+      showToast(window._t('toast.wavExported2') + notes.length + window._t('export.notesDone') + totalDuration.toFixed(1) + window._t('export.done'));
     } catch (e) {
-      showToast('WAV 导出失败: ' + e.message);
+      showToast(window._t('toast.wavFailed') + e.message);
       console.error(e);
     }
   };
 
-  /* ── MIDI 工具函数 ── */
   function freqToMidiNote(freq) {
     if (freq <= 0) return 69;
     return Math.round(69 + 12 * Math.log2(freq / 440));
@@ -1340,11 +1831,10 @@
     return new Uint8Array(header.concat(trackHeader).concat(trackData));
   }
 
-  /* ── 导出 MIDI ── */
   window.exportMIDI = function() {
     var notes = getNotes();
     if (notes.length === 0) {
-      showToast('没有可导出的音符，请先在 MIDI 编辑器中输入音符');
+      showToast(window._t('toast.noExportNotes'));
       return;
     }
 
@@ -1358,34 +1848,30 @@
 
     var trackEvents = [];
 
-    // 设置速度
     trackEvents.push({ delta: 0, data: [0xFF, 0x51, 0x03, (tempo >> 16) & 0xFF, (tempo >> 8) & 0xFF, tempo & 0xFF] });
 
-    // 音轨名称
     var nameBytes = [];
     var nameStr = 'MIDI Export';
     for (var i = 0; i < nameStr.length; i++) nameBytes.push(nameStr.charCodeAt(i));
     trackEvents.push({ delta: 0, data: [0xFF, 0x03].concat(nameBytes) });
 
-    // 乐器选择：原声大钢琴 (Program 0)
     trackEvents.push({ delta: 0, data: [0xC0, 0] });
 
-    // 音符事件
     for (var i = 0; i < notes.length; i++) {
       var note = notes[i];
       if (note.type === 'chord') {
-        // 和弦：所有音符同时 Note On (delta=0)
         for (var ci = 0; ci < note.notes.length; ci++) {
           var cn = note.notes[ci];
-          var freq = baseFreq * (cn.pitchNum / cn.pitchDen);
+          var bf = (cn.noteBaseFreq !== undefined) ? cn.noteBaseFreq : baseFreq;
+          var freq = bf * (cn.pitchNum / cn.pitchDen);
           var midiNote = Math.max(0, Math.min(127, freqToMidiNote(freq)));
           trackEvents.push({ delta: 0, data: [0x90, midiNote, cn.velocity] });
         }
-        // 和弦 Note Off：统一使用和弦最大时值，按实际时长排序后依次发送
         var chordNoteOffs = [];
         for (var cj = 0; cj < note.notes.length; cj++) {
           var cjn = note.notes[cj];
-          var freq = baseFreq * (cjn.pitchNum / cjn.pitchDen);
+          var bf = (cjn.noteBaseFreq !== undefined) ? cjn.noteBaseFreq : baseFreq;
+          var freq = bf * (cjn.pitchNum / cjn.pitchDen);
           var midiNote = Math.max(0, Math.min(127, freqToMidiNote(freq)));
           var actualTicks;
           if (noteLenMode === 'fixed') {
@@ -1395,7 +1881,6 @@
           }
           chordNoteOffs.push({ ticks: actualTicks, midiNote: midiNote });
         }
-        // 按时长排序（短的先结束）
         chordNoteOffs.sort(function(a, b) { return a.ticks - b.ticks; });
         var prevTicks = 0;
         for (var ck = 0; ck < chordNoteOffs.length; ck++) {
@@ -1403,7 +1888,8 @@
           prevTicks = chordNoteOffs[ck].ticks;
         }
       } else {
-        var freq = baseFreq * (note.pitchNum / note.pitchDen);
+        var bf = (note.noteBaseFreq !== undefined) ? note.noteBaseFreq : baseFreq;
+        var freq = bf * (note.pitchNum / note.pitchDen);
         var midiNote = Math.max(0, Math.min(127, freqToMidiNote(freq)));
         var velocity = note.velocity;
 
@@ -1419,7 +1905,6 @@
       }
     }
 
-    // 轨道结束
     trackEvents.push({ delta: 0, data: [0xFF, 0x2F, 0x00] });
 
     var midiBytes = buildMIDIBytes(0, 1, PPQN, trackEvents);
@@ -1430,7 +1915,26 @@
     a.download = 'midi-export-' + new Date().toISOString().slice(0, 10) + '.mid';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('MIDI 已导出 (' + notes.length + ' 音符, ' + Math.round(effBPM) + ' BPM)');
+    showToast(window._t('toast.midiExported') + ' (' + notes.length + window._t('export.notesCount2') + Math.round(effBPM) + window._t('export.bpm'));
   };
 
+})();
+
+/* ═══════════════════════════════════════════
+   初始化：应用语言设置
+   ═══════════════════════════════════════════ */
+(function() {
+  // Apply saved language on load
+  var savedLang = localStorage.getItem('midi-tools-lang');
+  if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
+    window.setLanguage(savedLang);
+  } else {
+    // Default: update data-i18n elements at least
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n');
+      // These are already set in HTML as Chinese defaults
+    });
+    // Trigger initial refresh for dynamic elements
+    if (window._midiRefreshLang) window._midiRefreshLang();
+  }
 })();

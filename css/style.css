@@ -79,6 +79,32 @@ header .logo span { color: var(--accent); }
 .tab-content { display: none; flex: 1; min-height: 0; flex-direction: column; }
 .tab-content.active { display: flex; }
 
+/* ── 语言切换 ── */
+.lang-switch {
+  display: flex;
+  gap: 4px;
+  margin-left: 16px;
+}
+.lang-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+  outline: none;
+}
+.lang-btn:hover { border-color: var(--muted); color: var(--ink); }
+.lang-btn.active {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: var(--bg);
+  font-weight: 600;
+}
+
 /* ── 共享按钮样式 ── */
 .btn {
   display: inline-flex;
