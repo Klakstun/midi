@@ -154,4 +154,4 @@ scheduleUIUpdates() ── requestAnimationFrame 驱动播放高亮
 
 ## 许可
 
-AGPL License
+MIT License
