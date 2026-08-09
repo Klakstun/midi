@@ -154,4 +154,4 @@ scheduleUIUpdates() ── playback highlight driven by requestAnimationFrame
 
 ## License
 
-AGPL License
+MIT License

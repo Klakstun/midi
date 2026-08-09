@@ -91,7 +91,7 @@
       'sstv.export': '🔊 导出 WAV',
       'sstv.refresh': '🔄 刷新编码',
       'sstv.hexPreview': '十六进制编码预览',
-      'sstv.info': 'SSTV Robot72 Color 频率映射\n文本字符 → ASCII/Unicode 编码 → 十六进制 00~FF → 映射到 SSTV 亮度频率范围 1500 Hz (黑) ~ 2300 Hz (白)\n频率计算公式: freq = 1500 + (hexVal / 255) × 800',
+      'sstv.info': '<strong>SSTV Robot72 Color 频率映射</strong><br>文本字符 → ASCII/Unicode 编码 → 十六进制 <code>00</code>~<code>FF</code> → 映射到 SSTV 亮度频率范围 <code>1500 Hz</code> (黑) ~ <code>2300 Hz</code> (白)<br>频率计算公式: <code>freq = 1500 + (hexVal / 255) × 800</code>',
 
       'toast.noNotes': '没有可播放的音符',
       'toast.exampleLoaded': '示例已加载',
@@ -155,6 +155,17 @@
 
       'sstv.table.header': '<tr><th>#</th><th>字符</th><th>Hex</th><th>频率 (Hz)</th></tr>',
       'sstv.table.headerEn': '<tr><th>#</th><th>Char</th><th>Hex</th><th>Freq (Hz)</th></tr>',
+
+      'footer.source': '源代码',
+      'footer.advanced': '高级参数',
+
+      'advanced.title': '高级参数',
+      'advanced.attack': 'Attack (秒)',
+      'advanced.release': 'Release (秒)',
+      'advanced.sustainLevel': 'Sustain Level',
+      'advanced.harmonic': '泛音音量',
+      'advanced.fadeOut': '淡出比例',
+      'advanced.reset': '恢复默认',
 
       'scale.comment': '// 纯律自然大调音阶 (Just Intonation)',
       'melody.comment': '// 小星星 (纯律)',
@@ -246,7 +257,7 @@
       'sstv.export': '🔊 Export WAV',
       'sstv.refresh': '🔄 Refresh',
       'sstv.hexPreview': 'Hex Encoding Preview',
-      'sstv.info': 'SSTV Robot72 Color Frequency Mapping\nText chars → ASCII/Unicode → Hex 00~FF → mapped to SSTV luminance frequency range 1500 Hz (black) ~ 2300 Hz (white)\nFrequency formula: freq = 1500 + (hexVal / 255) × 800',
+      'sstv.info': '<strong>SSTV Robot72 Color Frequency Mapping</strong><br>Text chars → ASCII/Unicode → Hex <code>00</code>~<code>FF</code> → mapped to SSTV luminance frequency range <code>1500 Hz</code> (black) ~ <code>2300 Hz</code> (white)<br>Frequency formula: <code>freq = 1500 + (hexVal / 255) × 800</code>',
 
       'toast.noNotes': 'No notes to play',
       'toast.exampleLoaded': 'Example loaded',
@@ -311,13 +322,24 @@
       'sstv.table.header': '<tr><th>#</th><th>Char</th><th>Hex</th><th>Freq (Hz)</th></tr>',
       'sstv.table.headerEn': '<tr><th>#</th><th>Char</th><th>Hex</th><th>Freq (Hz)</th></tr>',
 
+      'footer.source': 'Source Code',
+      'footer.advanced': 'Advanced',
+
+      'advanced.title': 'Advanced Parameters',
+      'advanced.attack': 'Attack (s)',
+      'advanced.release': 'Release (s)',
+      'advanced.sustainLevel': 'Sustain Level',
+      'advanced.harmonic': 'Harmonic Vol',
+      'advanced.fadeOut': 'Fade Out Ratio',
+      'advanced.reset': 'Reset Defaults',
+
       'scale.comment': '// Just Intonation Major Scale',
       'melody.comment': '// Twinkle Twinkle Little Star (Just Intonation)',
       'chords.comment': '// Chord examples: use { } syntax, each brace on its own line\n// Inner notes play simultaneously, chord duration = longest note\n// Major triad\n{\n1/1,1/1,10,01\n1/1,5/4,09,02\n1/1,3/2,08,03\n}\n// Minor triad\n{\n1/1,1/1,10,04\n1/1,6/5,09,05\n1/1,3/2,08,06\n}\n// Dominant seventh\n{\n1/1,1/1,10,07\n1/1,5/4,09,08\n1/1,3/2,08,09\n1/1,7/4,07,10\n}\n// Block chords (long notes)\n{\n3/1,1/1,10,11\n3/1,5/4,09,12\n3/1,3/2,08,13\n3/1,2/1,07,14\n}'
     }
   };
 
-  var currentLang = 'zh';
+  var currentLang = 'en';
 
   window._t = function(key) {
     var dict = I18N[currentLang];
@@ -345,6 +367,13 @@
       var key = el.getAttribute('data-i18n-placeholder');
       var val = I18N[lang][key];
       if (val !== undefined) el.placeholder = val;
+    });
+
+    // Update innerHTML elements
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n-html');
+      var val = I18N[lang][key];
+      if (val !== undefined) el.innerHTML = val.replace(/\n/g, '<br>');
     });
 
     // Update document title
@@ -747,6 +776,7 @@
     var bf = (note.noteBaseFreq !== undefined) ? note.noteBaseFreq : baseFreq;
     var freq = bf * (note.pitchNum / note.pitchDen);
     var effBPM = getEffectiveBPM();
+    var adv = window.getAdvancedParams ? window.getAdvancedParams() : { attack: 0.02, release: 0.05, sustain: 0.7, harmonic: 0.15, fadeOut: 0.2 };
 
     var osc = ctx.createOscillator();
     osc.type = waveform;
@@ -762,26 +792,27 @@
     var beatDuration = 60 / effBPM;
     var noteDuration = note.duration * beatDuration;
 
-    var attackTime = Math.min(0.02, noteDuration * 0.1);
-    var decayTime = Math.min(0.08, noteDuration * 0.2);
-    var sustainLevel = vol * 0.7;
+    var attackTime = Math.min(adv.attack, noteDuration * 0.1);
+    var decayTime = Math.min(adv.release, noteDuration * 0.2);
+    var sustainLevel = vol * adv.sustain;
+    var fadeOutStart = 1 - adv.fadeOut;
 
     gain.gain.setValueAtTime(0, time);
     gain.gain.linearRampToValueAtTime(vol, time + attackTime);
     gain.gain.linearRampToValueAtTime(sustainLevel, time + attackTime + decayTime);
-    gain.gain.setValueAtTime(sustainLevel, time + noteDuration * 0.8);
+    gain.gain.setValueAtTime(sustainLevel, time + noteDuration * fadeOutStart);
     gain.gain.linearRampToValueAtTime(0, time + noteDuration);
 
     var gain2 = ctx.createGain();
     gain2.gain.setValueAtTime(0, time);
-    gain2.gain.linearRampToValueAtTime(vol * 0.15, time + attackTime);
-    gain2.gain.linearRampToValueAtTime(0, time + noteDuration * 0.5);
+    gain2.gain.linearRampToValueAtTime(vol * adv.harmonic, time + attackTime);
+    gain2.gain.linearRampToValueAtTime(0, time + noteDuration * fadeOutStart);
 
     osc.connect(gain); osc2.connect(gain2);
     gain.connect(ctx.destination); gain2.connect(ctx.destination);
 
     osc.start(time); osc.stop(time + noteDuration + 0.05);
-    osc2.start(time); osc2.stop(time + noteDuration * 0.5 + 0.05);
+    osc2.start(time); osc2.stop(time + noteDuration * fadeOutStart + 0.05);
 
     return { osc: osc, osc2: osc2, gain: gain, gain2: gain2 };
   }
@@ -1406,7 +1437,7 @@
   function updateAudioExportLabels() {
     var t = window._t;
     var audioTitle = document.querySelector('#tab-dir h1 span');
-    if (audioTitle) audioTitle.textContent = t('audio.title').split(' ')[0] || 'Audio';
+    if (audioTitle) audioTitle.textContent = t('audio.title');
     var subtitle = document.querySelector('#tab-dir .subtitle');
     if (subtitle) subtitle.textContent = t('audio.subtitle');
     var statLabels = document.querySelectorAll('#tab-dir .stat-label');
@@ -1444,10 +1475,6 @@
     }
     var sstvHexLabel = document.querySelector('#tab-sstv .sstv-hex-label');
     if (sstvHexLabel) sstvHexLabel.textContent = t('sstv.hexPreview');
-    var sstvInfo = document.querySelector('#tab-sstv .sstv-info-card');
-    if (sstvInfo) {
-      sstvInfo.innerHTML = '<strong>' + t('sstv.hexPreview') + '</strong><br>' + t('sstv.info').replace(/\n/g, '<br>');
-    }
     // Update SSTV button text
     if (document.getElementById('sstvBtnPlay')) {
       var sstvBtnPlay = document.getElementById('sstvBtnPlay');
@@ -1495,6 +1522,46 @@
   }
   window.addEventListener('resize', resizeHandler);
   window._midiResizeHandler = resizeHandler;
+
+  // ── 可拖动分隔条：调整编辑器/侧边栏宽度 ──
+  (function() {
+    var handle = document.getElementById('resizeHandle');
+    var mainContainer = document.querySelector('.main-container');
+    var sidebar = document.querySelector('.sidebar');
+    if (!handle || !mainContainer || !sidebar) return;
+
+    var isDragging = false;
+    var startX = 0;
+    var startWidth = 0;
+
+    handle.addEventListener('mousedown', function(e) {
+      isDragging = true;
+      startX = e.clientX;
+      startWidth = sidebar.offsetWidth;
+      handle.classList.add('active');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!isDragging) return;
+      var dx = startX - e.clientX;
+      var newWidth = startWidth + dx;
+      newWidth = Math.max(180, Math.min(500, newWidth));
+      sidebar.style.width = newWidth + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (!isDragging) return;
+      isDragging = false;
+      handle.classList.remove('active');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      // Trigger editor resize update
+      if (window._midiResizeHandler) window._midiResizeHandler();
+    });
+  })();
 
   window.addEventListener('beforeunload', function() {
     stopPlayback();
@@ -1718,26 +1785,28 @@
           osc2.frequency.setValueAtTime(freq * 2, cumulativeTime);
 
           var gain = offlineCtx.createGain();
-          var attackTime = Math.min(0.02, noteDuration * 0.1);
-          var decayTime = Math.min(0.08, noteDuration * 0.2);
-          var sustainLevel = vol * 0.7;
+          var adv = window.getAdvancedParams ? window.getAdvancedParams() : { attack: 0.02, release: 0.05, sustain: 0.7, harmonic: 0.15, fadeOut: 0.2 };
+          var attackTime = Math.min(adv.attack, noteDuration * 0.1);
+          var decayTime = Math.min(adv.release, noteDuration * 0.2);
+          var sustainLevel = vol * adv.sustain;
+          var fadeOutStart = 1 - adv.fadeOut;
 
           gain.gain.setValueAtTime(0, cumulativeTime);
           gain.gain.linearRampToValueAtTime(vol, cumulativeTime + attackTime);
           gain.gain.linearRampToValueAtTime(sustainLevel, cumulativeTime + attackTime + decayTime);
-          gain.gain.setValueAtTime(sustainLevel, cumulativeTime + noteDuration * 0.8);
+          gain.gain.setValueAtTime(sustainLevel, cumulativeTime + noteDuration * fadeOutStart);
           gain.gain.linearRampToValueAtTime(0, cumulativeTime + noteDuration);
 
           var gain2 = offlineCtx.createGain();
           gain2.gain.setValueAtTime(0, cumulativeTime);
-          gain2.gain.linearRampToValueAtTime(vol * 0.15, cumulativeTime + attackTime);
-          gain2.gain.linearRampToValueAtTime(0, cumulativeTime + noteDuration * 0.5);
+          gain2.gain.linearRampToValueAtTime(vol * adv.harmonic, cumulativeTime + attackTime);
+          gain2.gain.linearRampToValueAtTime(0, cumulativeTime + noteDuration * fadeOutStart);
 
           osc.connect(gain); osc2.connect(gain2);
           gain.connect(offlineCtx.destination); gain2.connect(offlineCtx.destination);
 
           osc.start(cumulativeTime); osc.stop(cumulativeTime + noteDuration + 0.05);
-          osc2.start(cumulativeTime); osc2.stop(cumulativeTime + noteDuration * 0.5 + 0.05);
+          osc2.start(cumulativeTime); osc2.stop(cumulativeTime + noteDuration * fadeOutStart + 0.05);
         }
         cumulativeTime += note.duration * beatDuration;
       } else {
@@ -1756,9 +1825,10 @@
         osc2.frequency.setValueAtTime(freq * 2, cumulativeTime);
 
         var gain = offlineCtx.createGain();
-        var attackTime = Math.min(0.02, noteDuration * 0.1);
-        var decayTime = Math.min(0.08, noteDuration * 0.2);
-        var sustainLevel = vol * 0.7;
+        var adv2 = window.getAdvancedParams ? window.getAdvancedParams() : { attack: 0.02, release: 0.05, sustain: 0.7, harmonic: 0.15, fadeOut: 0.2 };
+        var attackTime = Math.min(adv2.attack, noteDuration * 0.1);
+        var decayTime = Math.min(adv2.release, noteDuration * 0.2);
+        var sustainLevel = vol * adv2.sustain;
 
         gain.gain.setValueAtTime(0, cumulativeTime);
         gain.gain.linearRampToValueAtTime(vol, cumulativeTime + attackTime);
@@ -1921,20 +1991,86 @@
 })();
 
 /* ═══════════════════════════════════════════
+   高级参数面板
+   ═══════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  var defaults = {
+    attack: 0.020,
+    release: 0.050,
+    sustain: 0.70,
+    harmonic: 0.15,
+    fadeOut: 0.20
+  };
+
+  var params = {};
+  Object.keys(defaults).forEach(function(k) { params[k] = defaults[k]; });
+
+  window.toggleAdvancedPanel = function() {
+    var overlay = document.getElementById('advancedOverlay');
+    var panel = document.getElementById('advancedPanel');
+    var isOpen = panel.classList.contains('show');
+    if (isOpen) {
+      overlay.classList.remove('show');
+      panel.classList.remove('show');
+    } else {
+      overlay.classList.add('show');
+      panel.classList.add('show');
+    }
+  };
+
+  window.advancedUpdateParam = function(key, val) {
+    var displayMap = {
+      attack: { id: 'advAttackVal', scale: 0.001, fixed: 3 },
+      release: { id: 'advReleaseVal', scale: 0.001, fixed: 3 },
+      sustain: { id: 'advSustainVal', scale: 0.01, fixed: 2 },
+      harmonic: { id: 'advHarmonicVal', scale: 0.01, fixed: 2 },
+      fadeOut: { id: 'advFadeOutVal', scale: 0.01, fixed: 2 }
+    };
+    var dm = displayMap[key];
+    var value = parseInt(val) * dm.scale;
+    params[key] = value;
+    document.getElementById(dm.id).textContent = value.toFixed(dm.fixed);
+  };
+
+  window.advancedResetDefaults = function() {
+    Object.keys(defaults).forEach(function(k) { params[k] = defaults[k]; });
+    document.getElementById('advAttack').value = 20;
+    document.getElementById('advAttackVal').textContent = '0.020';
+    document.getElementById('advRelease').value = 50;
+    document.getElementById('advReleaseVal').textContent = '0.050';
+    document.getElementById('advSustain').value = 70;
+    document.getElementById('advSustainVal').textContent = '0.70';
+    document.getElementById('advHarmonic').value = 15;
+    document.getElementById('advHarmonicVal').textContent = '0.15';
+    document.getElementById('advFadeOut').value = 20;
+    document.getElementById('advFadeOutVal').textContent = '0.20';
+  };
+
+  window.getAdvancedParams = function() { return params; };
+
+  // Close on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var panel = document.getElementById('advancedPanel');
+      if (panel && panel.classList.contains('show')) {
+        toggleAdvancedPanel();
+      }
+    }
+  });
+})();
+
+/* ═══════════════════════════════════════════
    初始化：应用语言设置
    ═══════════════════════════════════════════ */
 (function() {
-  // Apply saved language on load
+  // Apply saved language on load, default to English
   var savedLang = localStorage.getItem('midi-tools-lang');
   if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
     window.setLanguage(savedLang);
   } else {
-    // Default: update data-i18n elements at least
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
-      var key = el.getAttribute('data-i18n');
-      // These are already set in HTML as Chinese defaults
-    });
-    // Trigger initial refresh for dynamic elements
-    if (window._midiRefreshLang) window._midiRefreshLang();
+    // No saved preference: apply English (default)
+    window.setLanguage('en');
   }
 })();
