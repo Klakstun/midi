@@ -155,4 +155,4 @@ scheduleUIUpdates() ── подсветка воспроизведения ч�
 
 ## Лицензия
 
-AGPL License
+MIT License
