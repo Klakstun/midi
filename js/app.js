@@ -158,6 +158,8 @@
 
       'footer.source': '源代码',
       'footer.advanced': '高级参数',
+      'about.source': '源代码',
+      'about.sourceLink': 'GitHub',
 
       'advanced.title': '高级参数',
       'advanced.attack': 'Attack (秒)',
@@ -166,6 +168,24 @@
       'advanced.harmonic': '泛音音量',
       'advanced.fadeOut': '淡出比例',
       'advanced.reset': '恢复默认',
+
+      'left.nav': '功能',
+      'sidebar.info': '音符信息',
+      'sidebar.tutorial': '教程',
+      'sidebar.about': '作品信息',
+      'sidebar.examples': '示例',
+      'about.project': '项目信息',
+      'about.name': '项目名称',
+      'about.version': '版本',
+      'about.license': '许可',
+      'about.repo': '仓库',
+      'about.author': '作者',
+      'about.authorName': '作者',
+      'about.credit': '署名',
+      'about.contact': '联系方式',
+      'about.desc': '描述',
+      'about.thanks': '致谢',
+      'about.advanced': '高级参数',
 
       'scale.comment': '// 纯律自然大调音阶 (Just Intonation)',
       'melody.comment': '// 小星星 (纯律)',
@@ -324,6 +344,8 @@
 
       'footer.source': 'Source Code',
       'footer.advanced': 'Advanced',
+      'about.source': 'Source',
+      'about.sourceLink': 'GitHub',
 
       'advanced.title': 'Advanced Parameters',
       'advanced.attack': 'Attack (s)',
@@ -332,6 +354,24 @@
       'advanced.harmonic': 'Harmonic Vol',
       'advanced.fadeOut': 'Fade Out Ratio',
       'advanced.reset': 'Reset Defaults',
+
+      'left.nav': 'Menu',
+      'sidebar.info': 'Note Info',
+      'sidebar.tutorial': 'Tutorial',
+      'sidebar.about': 'About',
+      'sidebar.examples': 'Examples',
+      'about.project': 'Project',
+      'about.name': 'Name',
+      'about.version': 'Version',
+      'about.license': 'License',
+      'about.repo': 'Repository',
+      'about.author': 'Author',
+      'about.authorName': 'Author',
+      'about.credit': 'Credit',
+      'about.contact': 'Contact',
+      'about.desc': 'Description',
+      'about.thanks': 'Thanks',
+      'about.advanced': 'Advanced',
 
       'scale.comment': '// Just Intonation Major Scale',
       'melody.comment': '// Twinkle Twinkle Little Star (Just Intonation)',
@@ -391,36 +431,65 @@
 })();
 
 /* ═══════════════════════════════════════════
-   标签切换
+   标签切换 & 左侧栏 & 右侧栏
    ═══════════════════════════════════════════ */
 (function() {
   'use strict';
-  var tabBtns = document.querySelectorAll('.tab-btn');
-  var tabContents = document.querySelectorAll('.tab-content');
   var body = document.body;
 
-  tabBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var tab = this.getAttribute('data-tab');
-      tabBtns.forEach(function(b) { b.classList.remove('active'); });
-      this.classList.add('active');
-      tabContents.forEach(function(c) { c.classList.remove('active'); });
-      document.getElementById('tab-' + tab).classList.add('active');
+  // ── 左侧栏切换 ──
+  window.toggleLeftSidebar = function() {
+    var sidebar = document.getElementById('leftSidebar');
+    var toggle = document.getElementById('sidebarToggle');
+    if (sidebar.classList.contains('open')) {
+      sidebar.classList.remove('open');
+      toggle.classList.remove('active');
+    } else {
+      sidebar.classList.add('open');
+      toggle.classList.add('active');
+    }
+  };
 
-      if (tab === 'midi') {
-        body.classList.remove('dir-mode');
-        if (window._midiResizeHandler) window._midiResizeHandler();
-      } else if (tab === 'sstv') {
-        body.classList.add('dir-mode');
-        if (window.midiStop) window.midiStop();
-        if (window.sstvRefreshHex) window.sstvRefreshHex();
-      } else {
-        body.classList.add('dir-mode');
-        if (window.midiStop) window.midiStop();
-        if (window.audioExportRefresh) window.audioExportRefresh();
-      }
-    });
-  });
+  // ── 主标签切换（MIDI / 音频导出 / SSTV） ──
+  window.switchMainTab = function(tab) {
+    // 更新左侧栏高亮
+    var navItems = document.querySelectorAll('.left-nav-item');
+    navItems.forEach(function(item) { item.classList.remove('active'); });
+    var activeItem = document.querySelector('.left-nav-item[data-tab="' + tab + '"]');
+    if (activeItem) activeItem.classList.add('active');
+
+    // 切换标签内容
+    var tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(function(c) { c.classList.remove('active'); });
+    var target = document.getElementById('tab-' + tab);
+    if (target) target.classList.add('active');
+
+    if (tab === 'midi') {
+      body.classList.remove('dir-mode');
+      if (window._midiResizeHandler) window._midiResizeHandler();
+    } else if (tab === 'sstv') {
+      body.classList.add('dir-mode');
+      if (window.midiStop) window.midiStop();
+      if (window.sstvRefreshHex) window.sstvRefreshHex();
+    } else {
+      body.classList.add('dir-mode');
+      if (window.midiStop) window.midiStop();
+      if (window.audioExportRefresh) window.audioExportRefresh();
+    }
+  };
+
+  // ── 右侧栏标签切换（音符信息 / 教程 / 作品信息） ──
+  window.switchSidebarTab = function(tab) {
+    var sidebarTabs = document.querySelectorAll('.sidebar-tab');
+    sidebarTabs.forEach(function(t) { t.classList.remove('active'); });
+    var activeTab = document.querySelector('.sidebar-tab[data-sidebar-tab="' + tab + '"]');
+    if (activeTab) activeTab.classList.add('active');
+
+    var panels = document.querySelectorAll('.sidebar-panel');
+    panels.forEach(function(p) { p.classList.remove('active'); });
+    var panel = document.getElementById('sidebarPanel' + tab.charAt(0).toUpperCase() + tab.slice(1));
+    if (panel) panel.classList.add('active');
+  };
 })();
 
 /* ═══════════════════════════════════════════
@@ -1355,8 +1424,8 @@
     updateStatusBar();
     // Update speed display
     updateSpeedDisplay();
-    // Update toolbar labels
-    var labels = document.querySelectorAll('#tab-midi .midi-toolbar label');
+    // Update toolbar labels (now in header)
+    var labels = document.querySelectorAll('header .toolbar-group label');
     if (labels.length >= 5) {
       labels[0].textContent = window._t('label.bpm');
       labels[1].textContent = window._t('label.baseFreq');
@@ -1391,12 +1460,25 @@
   }
 
   function updateSidebarHeadings() {
-    var h3s = document.querySelectorAll('#tab-midi .sidebar h3');
-    if (h3s.length >= 4) {
-      h3s[0].textContent = window._t('sidebar.speed');
-      h3s[1].textContent = window._t('sidebar.noteInfo');
-      h3s[2].textContent = window._t('sidebar.format');
-      h3s[3].textContent = window._t('sidebar.shortcuts');
+    // Update sidebar tab buttons
+    var sidebarTabs = document.querySelectorAll('.sidebar-tab');
+    if (sidebarTabs.length >= 3) {
+      sidebarTabs[0].textContent = window._t('sidebar.info');
+      sidebarTabs[1].textContent = window._t('sidebar.tutorial');
+      sidebarTabs[2].textContent = window._t('sidebar.about');
+    }
+    // Update note info panel headings
+    var infoH3s = document.querySelectorAll('#sidebarPanelInfo h3');
+    if (infoH3s.length >= 2) {
+      infoH3s[0].textContent = window._t('sidebar.speed');
+      infoH3s[1].textContent = window._t('sidebar.noteInfo');
+    }
+    // Update tutorial panel headings
+    var tutorialH3s = document.querySelectorAll('#sidebarPanelTutorial h3');
+    if (tutorialH3s.length >= 3) {
+      tutorialH3s[0].textContent = window._t('sidebar.format');
+      tutorialH3s[1].textContent = window._t('sidebar.shortcuts');
+      tutorialH3s[2].textContent = window._t('sidebar.examples');
     }
     // Update note info labels
     document.getElementById('infoLine').parentElement.querySelector('.label').textContent = window._t('info.labelLine');
@@ -1418,7 +1500,7 @@
   }
 
   function updateHelpBox() {
-    var helpBox = document.querySelector('#tab-midi .help-box');
+    var helpBox = document.querySelector('#sidebarPanelTutorial .help-box');
     if (!helpBox) return;
     var t = window._t;
     helpBox.innerHTML =
@@ -1991,7 +2073,7 @@
 })();
 
 /* ═══════════════════════════════════════════
-   高级参数面板
+   高级参数（侧边栏内嵌）
    ═══════════════════════════════════════════ */
 (function() {
   'use strict';
@@ -2006,19 +2088,6 @@
 
   var params = {};
   Object.keys(defaults).forEach(function(k) { params[k] = defaults[k]; });
-
-  window.toggleAdvancedPanel = function() {
-    var overlay = document.getElementById('advancedOverlay');
-    var panel = document.getElementById('advancedPanel');
-    var isOpen = panel.classList.contains('show');
-    if (isOpen) {
-      overlay.classList.remove('show');
-      panel.classList.remove('show');
-    } else {
-      overlay.classList.add('show');
-      panel.classList.add('show');
-    }
-  };
 
   window.advancedUpdateParam = function(key, val) {
     var displayMap = {
@@ -2036,29 +2105,18 @@
 
   window.advancedResetDefaults = function() {
     Object.keys(defaults).forEach(function(k) { params[k] = defaults[k]; });
-    document.getElementById('advAttack').value = 20;
-    document.getElementById('advAttackVal').textContent = '0.020';
-    document.getElementById('advRelease').value = 50;
-    document.getElementById('advReleaseVal').textContent = '0.050';
-    document.getElementById('advSustain').value = 70;
-    document.getElementById('advSustainVal').textContent = '0.70';
-    document.getElementById('advHarmonic').value = 15;
-    document.getElementById('advHarmonicVal').textContent = '0.15';
-    document.getElementById('advFadeOut').value = 20;
-    document.getElementById('advFadeOutVal').textContent = '0.20';
+    var resetSlider = function(id, valId, value, text) {
+      var el = document.getElementById(id); if (el) el.value = value;
+      var vel = document.getElementById(valId); if (vel) vel.textContent = text;
+    };
+    resetSlider('advAttack', 'advAttackVal', 20, '0.020');
+    resetSlider('advRelease', 'advReleaseVal', 50, '0.050');
+    resetSlider('advSustain', 'advSustainVal', 70, '0.70');
+    resetSlider('advHarmonic', 'advHarmonicVal', 15, '0.15');
+    resetSlider('advFadeOut', 'advFadeOutVal', 20, '0.20');
   };
 
   window.getAdvancedParams = function() { return params; };
-
-  // Close on Escape
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      var panel = document.getElementById('advancedPanel');
-      if (panel && panel.classList.contains('show')) {
-        toggleAdvancedPanel();
-      }
-    }
-  });
 })();
 
 /* ═══════════════════════════════════════════
