@@ -391,30 +391,37 @@
     localStorage.setItem('midi-tools-lang', lang);
 
     // Update language buttons
-    document.querySelectorAll('.lang-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
-    });
+    var langBtns = document.querySelectorAll('.lang-btn');
+    for (var i = 0; i < langBtns.length; i++) {
+      langBtns[i].classList.toggle('active', langBtns[i].getAttribute('data-lang') === lang);
+    }
 
     // Update all data-i18n elements
-    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var i18nEls = document.querySelectorAll('[data-i18n]');
+    for (var j = 0; j < i18nEls.length; j++) {
+      var el = i18nEls[j];
       var key = el.getAttribute('data-i18n');
       var val = I18N[lang][key];
       if (val !== undefined) el.textContent = val;
-    });
+    }
 
     // Update placeholders
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
-      var key = el.getAttribute('data-i18n-placeholder');
-      var val = I18N[lang][key];
-      if (val !== undefined) el.placeholder = val;
-    });
+    var phEls = document.querySelectorAll('[data-i18n-placeholder]');
+    for (var k = 0; k < phEls.length; k++) {
+      var phEl = phEls[k];
+      var phKey = phEl.getAttribute('data-i18n-placeholder');
+      var phVal = I18N[lang][phKey];
+      if (phVal !== undefined) phEl.placeholder = phVal;
+    }
 
     // Update innerHTML elements
-    document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
-      var key = el.getAttribute('data-i18n-html');
-      var val = I18N[lang][key];
-      if (val !== undefined) el.innerHTML = val.replace(/\n/g, '<br>');
-    });
+    var htmlEls = document.querySelectorAll('[data-i18n-html]');
+    for (var m = 0; m < htmlEls.length; m++) {
+      var htmlEl = htmlEls[m];
+      var htmlKey = htmlEl.getAttribute('data-i18n-html');
+      var htmlVal = I18N[lang][htmlKey];
+      if (htmlVal !== undefined) htmlEl.innerHTML = htmlVal.replace(/\n/g, '<br>');
+    }
 
     // Update document title
     document.title = 'MIDI ' + I18N[lang]['app.title'];
@@ -423,7 +430,7 @@
     if (window._midiRefreshLang) window._midiRefreshLang();
   };
 
-  // Load saved language preference
+  // Load saved language preference (applied by inline script in HTML)
   var savedLang = localStorage.getItem('midi-tools-lang');
   if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
     currentLang = savedLang;
