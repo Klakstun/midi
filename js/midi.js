@@ -20,6 +20,7 @@
   var audioCtx = null;
   var isPlaying = false;
   var isPaused = false;
+  var loopEnabled = false;
   var currentNoteIndex = 0;
   var scheduledNotes = [];
   var pauseTime = 0;
@@ -442,7 +443,17 @@
       }
     }
     if (!foundCurrent) {
-      stopPlayback();
+      if (loopEnabled) {
+        // Loop: restart from beginning
+        for (var k = 0; k < scheduledNotes.length; k++) {
+          try { scheduledNotes[k].osc.stop(); } catch(e) {}
+          try { scheduledNotes[k].osc2.stop(); } catch(e) {}
+        }
+        scheduledNotes = [];
+        play();
+      } else {
+        stopPlayback();
+      }
       return;
     }
     if (isPlaying) requestAnimationFrame(scheduleUIUpdates);
@@ -513,6 +524,22 @@
     if (isPlaying) pause();
     else if (isPaused) resume();
     else play();
+  }
+
+  function toggleLoop() {
+    loopEnabled = !loopEnabled;
+    var btnLoop = document.getElementById('btnLoop');
+    if (loopEnabled) {
+      btnLoop.classList.add('loop-on');
+      var onText = window._t('btn.loop.on');
+      if (onText === 'btn.loop.on') onText = window._t('label.volume') === '音量' ? '🔁 循环:开' : '🔁 Loop:ON';
+      btnLoop.innerHTML = onText;
+    } else {
+      btnLoop.classList.remove('loop-on');
+      var offText = window._t('btn.loop');
+      if (offText === 'btn.loop') offText = window._t('label.volume') === '音量' ? '🔁 循环' : '🔁 Loop';
+      btnLoop.innerHTML = offText;
+    }
   }
 
   function stopPlayback() {
@@ -665,6 +692,14 @@
     else if (isPaused) btnPlay.innerHTML = window._t('btn.resume');
     else btnPlay.innerHTML = window._t('btn.pause');
     btnStop.innerHTML = window._t('btn.stop');
+    var btnLoop = document.getElementById('btnLoop');
+    if (btnLoop) {
+      var loopText = window._t('btn.loop');
+      if (loopText === 'btn.loop') loopText = window._t('label.volume') === '音量' ? '🔁 循环' : '🔁 Loop';
+      var loopOnText = window._t('btn.loop.on');
+      if (loopOnText === 'btn.loop.on') loopOnText = window._t('label.volume') === '音量' ? '🔁 循环:开' : '🔁 Loop:ON';
+      btnLoop.innerHTML = loopEnabled ? loopOnText : loopText;
+    }
     // Update status
     if (isPlaying) setStatus('playing');
     else if (isPaused) setStatus('paused');
@@ -888,6 +923,7 @@
 
   // Expose to global
   window.midiTogglePlay = togglePlay;
+  window.midiToggleLoop = toggleLoop;
   window.midiStop = stopPlayback;
 
   window.midiEditor = {
