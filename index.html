@@ -449,12 +449,12 @@
   </div>
 </div>
 
-<script src="js/i18n.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/sstv.js"></script>
-<script src="js/midi.js"></script>
-<script src="js/export.js"></script>
-<script src="js/drag.js"></script>
+<script src="js/i18n.js?v=2"></script>
+<script src="js/ui.js?v=2"></script>
+<script src="js/sstv.js?v=2"></script>
+<script src="js/midi.js?v=2"></script>
+<script src="js/export.js?v=2"></script>
+<script src="js/drag.js?v=2"></script>
 <script>
   // Ensure i18n is applied after all scripts and DOM mutations
   setTimeout(function() {
@@ -463,6 +463,77 @@
       window.setLanguage(lang);
     }
   }, 100);
+</script>
+
+<!-- 主题配色系统（内联，避免预览器缓存拦截） -->
+<script>
+(function() {
+  'use strict';
+  var themes = {
+    default: {
+      primary: '#d0bcff', onPrimary: '#381e72', primaryContainer: '#4f378b', onPrimaryContainer: '#eaddff',
+      tertiary: '#efb8c8', onTertiary: '#492532', tertiaryContainer: '#633b48', onTertiaryContainer: '#ffd8e4'
+    },
+    ocean: {
+      primary: '#b3d4ff', onPrimary: '#003258', primaryContainer: '#00497d', onPrimaryContainer: '#d4e4ff',
+      tertiary: '#7dd3c0', onTertiary: '#00382c', tertiaryContainer: '#005142', onTertiaryContainer: '#a0f0dc'
+    },
+    forest: {
+      primary: '#b8f0b8', onPrimary: '#002108', primaryContainer: '#00390f', onPrimaryContainer: '#d4ffd4',
+      tertiary: '#ffd470', onTertiary: '#261900', tertiaryContainer: '#3a2800', onTertiaryContainer: '#ffe08a'
+    },
+    sunset: {
+      primary: '#ffb4a2', onPrimary: '#561e0d', primaryContainer: '#733422', onPrimaryContainer: '#ffdbd4',
+      tertiary: '#ffd470', onTertiary: '#261900', tertiaryContainer: '#3a2800', onTertiaryContainer: '#ffe08a'
+    },
+    lavender: {
+      primary: '#e5c4ff', onPrimary: '#3d1f6e', primaryContainer: '#553686', onPrimaryContainer: '#f2ddff',
+      tertiary: '#b8d4ff', onTertiary: '#002a4a', tertiaryContainer: '#003f6a', onTertiaryContainer: '#d4e4ff'
+    },
+    cherry: {
+      primary: '#ffc0cb', onPrimary: '#581a26', primaryContainer: '#74303c', onPrimaryContainer: '#ffd9e0',
+      tertiary: '#ffb4a2', onTertiary: '#561e0d', tertiaryContainer: '#733422', onTertiaryContainer: '#ffdbd4'
+    }
+  };
+
+  window.applyTheme = function(name) {
+    var t = themes[name] || themes['default'];
+    var root = document.documentElement;
+    root.style.setProperty('--md-primary', t.primary);
+    root.style.setProperty('--md-on-primary', t.onPrimary);
+    root.style.setProperty('--md-primary-container', t.primaryContainer);
+    root.style.setProperty('--md-on-primary-container', t.onPrimaryContainer);
+    root.style.setProperty('--md-tertiary', t.tertiary);
+    root.style.setProperty('--md-on-tertiary', t.onTertiary);
+    root.style.setProperty('--md-tertiary-container', t.tertiaryContainer);
+    root.style.setProperty('--md-on-tertiary-container', t.onTertiaryContainer);
+    localStorage.setItem('midi-tools-theme', name);
+    var popup = document.getElementById('themePopup');
+    if (popup) popup.classList.remove('show');
+    var swatches = document.querySelectorAll('.theme-swatch');
+    for (var i = 0; i < swatches.length; i++) {
+      swatches[i].classList.toggle('active', swatches[i].getAttribute('data-theme') === name);
+    }
+  };
+
+  window.toggleThemePopup = function() {
+    var popup = document.getElementById('themePopup');
+    if (popup) popup.classList.toggle('show');
+  };
+
+  // Close popup when clicking outside
+  document.addEventListener('click', function(e) {
+    var popup = document.getElementById('themePopup');
+    var btn = document.getElementById('themeBtn');
+    if (popup && btn && popup.classList.contains('show') && !popup.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      popup.classList.remove('show');
+    }
+  });
+
+  // Load saved theme
+  var savedTheme = localStorage.getItem('midi-tools-theme') || 'default';
+  window.applyTheme(savedTheme);
+})();
 </script>
 
 </body>
