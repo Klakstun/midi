@@ -78,7 +78,7 @@
       </svg>
     </button>
     <button class="theme-btn" id="themeBtn" onclick="toggleThemePopup()" title="主题配色">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20V2z" fill="var(--md-surface)"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20V2z" fill="var(--bg-surface)"/></svg>
     </button>
     <div class="lang-switch">
       <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')">中文</button>
@@ -476,42 +476,44 @@
   'use strict';
   var themes = {
     default: {
-      primary: '#d0bcff', onPrimary: '#381e72', primaryContainer: '#4f378b', onPrimaryContainer: '#eaddff',
-      tertiary: '#efb8c8', onTertiary: '#492532', tertiaryContainer: '#633b48', onTertiaryContainer: '#ffd8e4'
+      dark:  {accent:'#c4b0f7',accent2:'#f2b5cc',accentOn:'#2a1b4d',accent2On:'#4d1d2e',accentSoft:'#3d3260',accent2Soft:'#543843',accentSoftText:'#d7ccff',accent2SoftText:'#ffd6e2'},
+      light: {accent:'#6b52c4',accent2:'#c94e6e',accentOn:'#ffffff',accent2On:'#ffffff',accentSoft:'#e8e3ff',accent2Soft:'#ffe8f0',accentSoftText:'#3d2866',accent2SoftText:'#5c1a30'}
     },
     ocean: {
-      primary: '#b3d4ff', onPrimary: '#003258', primaryContainer: '#00497d', onPrimaryContainer: '#d4e4ff',
-      tertiary: '#7dd3c0', onTertiary: '#00382c', tertiaryContainer: '#005142', onTertiaryContainer: '#a0f0dc'
+      dark:  {accent:'#b3d4ff',accent2:'#7dd3c0',accentOn:'#003258',accent2On:'#00382c',accentSoft:'#234564',accent2Soft:'#234a44',accentSoftText:'#d4e4ff',accent2SoftText:'#a0f0dc'},
+      light: {accent:'#3a6fb5',accent2:'#2d8a70',accentOn:'#ffffff',accent2On:'#ffffff',accentSoft:'#d4e8ff',accent2Soft:'#d4f4ec',accentSoftText:'#1a3a5c',accent2SoftText:'#1a3a30'}
     },
     forest: {
-      primary: '#b8f0b8', onPrimary: '#002108', primaryContainer: '#00390f', onPrimaryContainer: '#d4ffd4',
-      tertiary: '#ffd470', onTertiary: '#261900', tertiaryContainer: '#3a2800', onTertiaryContainer: '#ffe08a'
+      dark:  {accent:'#b8f0b8',accent2:'#ffd470',accentOn:'#002108',accent2On:'#261900',accentSoft:'#1e3a22',accent2Soft:'#3d3420',accentSoftText:'#d4ffd4',accent2SoftText:'#ffe08a'},
+      light: {accent:'#3d8a3d',accent2:'#b88820',accentOn:'#ffffff',accent2On:'#ffffff',accentSoft:'#d4f4d4',accent2Soft:'#fff4d4',accentSoftText:'#1a3a1a',accent2SoftText:'#3d2a10'}
     },
     sunset: {
-      primary: '#ffb4a2', onPrimary: '#561e0d', primaryContainer: '#733422', onPrimaryContainer: '#ffdbd4',
-      tertiary: '#ffd470', onTertiary: '#261900', tertiaryContainer: '#3a2800', onTertiaryContainer: '#ffe08a'
+      dark:  {accent:'#ffb4a2',accent2:'#ffd470',accentOn:'#561e0d',accent2On:'#261900',accentSoft:'#4a2c20',accent2Soft:'#3d3420',accentSoftText:'#ffdbd4',accent2SoftText:'#ffe08a'},
+      light: {accent:'#c9604a',accent2:'#b88820',accentOn:'#ffffff',accent2On:'#ffffff',accentSoft:'#ffe8e0',accent2Soft:'#fff4d4',accentSoftText:'#4a1a10',accent2SoftText:'#3d2a10'}
     },
     lavender: {
-      primary: '#e5c4ff', onPrimary: '#3d1f6e', primaryContainer: '#553686', onPrimaryContainer: '#f2ddff',
-      tertiary: '#b8d4ff', onTertiary: '#002a4a', tertiaryContainer: '#003f6a', onTertiaryContainer: '#d4e4ff'
+      dark:  {accent:'#e5c4ff',accent2:'#b8d4ff',accentOn:'#3d1f6e',accent2On:'#002a4a',accentSoft:'#453560',accent2Soft:'#243a54',accentSoftText:'#f2ddff',accent2SoftText:'#d4e4ff'},
+      light: {accent:'#7b52b5',accent2:'#4a7fbf',accentOn:'#ffffff',accent2On:'#ffffff',accentSoft:'#f0e4ff',accent2Soft:'#e0ecff',accentSoftText:'#3a2060',accent2SoftText:'#1a3050'}
     },
     cherry: {
-      primary: '#ffc0cb', onPrimary: '#581a26', primaryContainer: '#74303c', onPrimaryContainer: '#ffd9e0',
-      tertiary: '#ffb4a2', onTertiary: '#561e0d', tertiaryContainer: '#733422', onTertiaryContainer: '#ffdbd4'
+      dark:  {accent:'#ffc0cb',accent2:'#ffb4a2',accentOn:'#581a26',accent2On:'#561e0d',accentSoft:'#52303a',accent2Soft:'#4a2c20',accentSoftText:'#ffd9e0',accent2SoftText:'#ffdbd4'},
+      light: {accent:'#c95a6a',accent2:'#c9604a',accentOn:'#ffffff',accent2On:'#ffffff',accentSoft:'#ffe0e8',accent2Soft:'#ffe8e0',accentSoftText:'#4a1a28',accent2SoftText:'#4a1a10'}
     }
   };
 
   window.applyTheme = function(name) {
     var t = themes[name] || themes['default'];
+    var isLight = document.body.classList.contains('light-mode');
+    var c = isLight ? (t.light || t.dark) : t.dark;
     var root = document.documentElement;
-    root.style.setProperty('--md-primary', t.primary);
-    root.style.setProperty('--md-on-primary', t.onPrimary);
-    root.style.setProperty('--md-primary-container', t.primaryContainer);
-    root.style.setProperty('--md-on-primary-container', t.onPrimaryContainer);
-    root.style.setProperty('--md-tertiary', t.tertiary);
-    root.style.setProperty('--md-on-tertiary', t.onTertiary);
-    root.style.setProperty('--md-tertiary-container', t.tertiaryContainer);
-    root.style.setProperty('--md-on-tertiary-container', t.onTertiaryContainer);
+    root.style.setProperty('--accent', c.accent);
+    root.style.setProperty('--accent-on', c.accentOn);
+    root.style.setProperty('--accent-soft', c.accentSoft);
+    root.style.setProperty('--accent-soft-text', c.accentSoftText);
+    root.style.setProperty('--accent2', c.accent2);
+    root.style.setProperty('--accent2-on', c.accent2On);
+    root.style.setProperty('--accent2-soft', c.accent2Soft);
+    root.style.setProperty('--accent2-soft-text', c.accent2SoftText);
     localStorage.setItem('midi-tools-theme', name);
     var popup = document.getElementById('themePopup');
     if (popup) popup.classList.remove('show');
@@ -547,6 +549,9 @@
       localStorage.setItem('midi-tools-color-mode', 'light');
     }
     updateModeIcon();
+    // Re-apply theme to update accent colors for the new mode
+    var savedTheme = localStorage.getItem('midi-tools-theme') || 'default';
+    window.applyTheme(savedTheme);
   };
 
   function updateModeIcon() {
